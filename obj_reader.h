@@ -128,16 +128,16 @@ typedef struct mesh {
     uint num_textures;
     uint num_faces;
 
-    string mtl_filename;
-    string name;
+    mutable_string mtl_filename;
+    mutable_string name;
 
     union { // Little endian
         uint flag;
         enum {
             // Little endian. LSB
-            pos_flag = 0x1,
-            norm_flag = 0x2,
-            tex_flag = 0x4
+            pos_flag    = (1 << 0),
+            tex_flag    = (1 << 1),
+            norm_flag   = (1 << 2)
             // MSB
         } flags;
     } face_flag;
@@ -326,17 +326,6 @@ void mesh_write_to_file(const mesh_t* mesh_obj, string fn) {
         }
         fprintf(file, "]\n");
 
-        if (mesh_obj->num_normals > 0) {
-            fprintf(file, "Normal Indices ->");
-            fprintf(file, "[");
-            for (uint j = 0; j < mesh_obj->face_dim; j++) {
-                fprintf(file, "%d", mesh_obj->face_data[i].norms[j]);
-                if (j != mesh_obj->face_dim - 1) 
-                    fprintf(file, ", ");
-            }
-            fprintf(file, "]\n");
-        }
-
         if (mesh_obj->num_textures > 0) {
             fprintf(file, "Texture Indices ->");
             fprintf(file, "[");
@@ -348,9 +337,61 @@ void mesh_write_to_file(const mesh_t* mesh_obj, string fn) {
             fprintf(file, "]\n");
         }
 
+        if (mesh_obj->num_normals > 0) {
+            fprintf(file, "Normal Indices ->");
+            fprintf(file, "[");
+            for (uint j = 0; j < mesh_obj->face_dim; j++) {
+                fprintf(file, "%d", mesh_obj->face_data[i].norms[j]);
+                if (j != mesh_obj->face_dim - 1) 
+                    fprintf(file, ", ");
+            }
+            fprintf(file, "]\n");
+        }
     }
 
     fclose(file);
+}
+
+// Gets and maintains the face flag for a particular element.
+uint get_face_flag(const char* face_str_element, uint line) {
+    const char* ptr = face_str_element;
+    uint first_pass = 1;
+    uint size = 0;
+    uint flag = 0;
+    uint shift = 0;
+    uint prev_flag = 0;
+    uint curr_flag = 0;
+    while (*ptr != '\0' && *ptr != '\n') {
+        while (*ptr != ' ' && *ptr != '\n' && *ptr != '\0') {
+            flag = 1 << shift;
+            size = 0;
+            // Keep counting even if we are on a space, and the last character is 'f'.
+            while (*ptr != '/' && *ptr != '\0' && *ptr != '\n' && (*ptr != ' ' || *(ptr - 1) == 'f')) {
+                ptr++;
+                size++;
+            }
+            if (size > 0) {
+                curr_flag |= flag;
+            } else {
+                shift++;
+                ptr++;
+            }
+        }
+        if (first_pass) {
+            first_pass = !first_pass;
+            prev_flag = curr_flag;
+        }
+        if (prev_flag != curr_flag) {
+            printf("Error: inconsistent face definitions at line %d, flag was %d, expected %d", line, curr_flag, prev_flag);
+            return 0;
+        }
+        prev_flag = curr_flag;
+        curr_flag = 0;
+        flag = 0;
+        shift = 0;
+        ptr++;
+    }
+    return prev_flag;
 }
 
 // Generates the mesh given a .obj file.
@@ -394,7 +435,6 @@ int read_mesh(const char* fn, mesh_t* data) {
         uint tmp_num_norms = 0;
         uint tmp_num_texs = 0;
         char buffer[MAX_LINE_LEN] = {0};
-        const uint max_size = sizeof(buffer);
         uint line_number = 0;
 
         while (fgets(buffer, sizeof(buffer), file)) {
@@ -408,10 +448,10 @@ int read_mesh(const char* fn, mesh_t* data) {
 
             type = strtok(buffer, " ");
 
-            uint tmp_dim = get_dim(original_string_for_dim);
-
             if (EQU(type, "v")) {
                 tmp_num_verts++;
+            
+                uint tmp_dim = get_dim(original_string_for_dim);
                 
                 if (data->vertex_dim != 0 && tmp_dim != data->vertex_dim) {
                     printf("Error: mismatch of vertex dimension at line %d: expected %d, got %d vertices\n", line_number, data->vertex_dim, tmp_dim);
@@ -424,6 +464,8 @@ int read_mesh(const char* fn, mesh_t* data) {
             } else if (EQU(type, "vn")) {
                 tmp_num_norms++;
                 
+                uint tmp_dim = get_dim(original_string_for_dim);
+                
                 if (data->vertex_dim != 0 && tmp_dim != data->vertex_dim) {
                     printf("Error: mismatch of vertex normal dimension at line %d: expected %d, got %d vertex normals (must be same dimensions as vertex dimension)\n", line_number, data->vertex_dim, tmp_dim);
                     RETURN_CODE = OBJ_INVALID_DIMS;
@@ -434,6 +476,8 @@ int read_mesh(const char* fn, mesh_t* data) {
                 continue;
             } else if (EQU(type, "vt")){
                 tmp_num_texs++;
+                
+                uint tmp_dim = get_dim(original_string_for_dim);
 
                 if (data->tex_dim != 0 && tmp_dim != data->tex_dim) {
                     printf("Error: mismatch of vertex texture dimension at line %d: expected %d, got %d vertex texture components\n", line_number, data->tex_dim, tmp_dim);
@@ -445,6 +489,8 @@ int read_mesh(const char* fn, mesh_t* data) {
                 continue;
             } else if (EQU(type, "f")) {
                 tmp_num_faces++;
+                
+                uint tmp_dim = get_dim(original_string_for_dim);
 
                 if (data->face_dim != 0 && tmp_dim != data->face_dim) {
                     printf("Error: mismatch of face dimension at line %d: expected %d, got %d face components\n", line_number, data->tex_dim, tmp_dim);
@@ -455,20 +501,18 @@ int read_mesh(const char* fn, mesh_t* data) {
                 }
 
                 // Special case: determine the face flag (what geometric components describe each face?):
-                data->face_flag.flag |= pos_flag;
-                if (strtok(original_string_for_face, "/")) {
-                    data->face_flag.flag |= norm_flag;
-                }
-                if (strtok(original_string_for_face, "/")) {
-                    data->face_flag.flag |= tex_flag;
-                }
+                data->face_flag.flag = get_face_flag(original_string_for_face, line_number);
 
                 continue;
             } else if (EQU(type, "o")) {
-                data->name = strtok(NULL, " ");
+                char* tmp_name = strtok(NULL, "\n");
+                data->name = calloc(1, strlen(tmp_name));
+                strcpy(data->name, tmp_name);
                 continue;
             } else if (EQU(type, "mtllib")) {
-                data->mtl_filename = strtok(NULL, " ");
+                char* tmp_name = strtok(NULL, "\n");
+                data->mtl_filename = calloc(1, strlen(tmp_name));
+                strcpy(data->mtl_filename, tmp_name);
                 continue;
             } else {
                 continue;
@@ -497,11 +541,11 @@ int read_mesh(const char* fn, mesh_t* data) {
     NEW(face_str_buffer, data->face_dim * sizeof(mutable_string));
 
     char line_buffer[MAX_LINE_LEN];
-    char original[sizeof(line_buffer)];
+    char original[sizeof line_buffer];
     void* buffer_data = malloc(MAX_BUFFER_SIZE);
     uint vi = 0, ti = 0, ni = 0, fi = 0;
 
-    while (fgets(line_buffer, sizeof(line_buffer), file)) {
+    while (fgets(line_buffer, sizeof line_buffer, file)) {
         CLEAR_BUFFER(buffer_data);
         void** mesh_member;
         strcpy(original, line_buffer);
@@ -540,20 +584,24 @@ int read_mesh(const char* fn, mesh_t* data) {
             CLEAR_BUFFER(pos_idx_buffer);
             CLEAR_BUFFER(tex_idx_buffer);
             CLEAR_BUFFER(norm_idx_buffer);
+
             for (uint j = 0; j < data->face_dim; j++) {
                 mutable_string buffer = strtok(face_str_buffer[j], "/");
-
-                int pos_index = atoi(buffer);
-                pos_idx_buffer[j] = pos_index;
-                buffer = strtok(NULL, "/");
-
-                int tex_index = atoi(buffer);
-                tex_idx_buffer[j] = tex_index;
-                buffer = strtok(NULL, "/");
-
-                int norm_index = atoi(buffer);
-                norm_idx_buffer[j] = norm_index;
-                buffer = strtok(NULL, "/");
+                if (data->face_flag.flag & pos_flag) {
+                    int pos_index = atoi(buffer);
+                    pos_idx_buffer[j] = pos_index;
+                    buffer = strtok(NULL, "/");
+                }
+                if (data->face_flag.flag & tex_flag) {
+                    int tex_index = atoi(buffer);
+                    tex_idx_buffer[j] = tex_index;
+                    buffer = strtok(NULL, "/");
+                }
+                if(data->face_flag.flag & norm_flag) {
+                    int norm_index = atoi(buffer);
+                    norm_idx_buffer[j] = norm_index;
+                    buffer = strtok(NULL, "/");
+                }
             }
             
             NEW(data->face_data[fi].indices, sizeof(pos_idx_buffer));
@@ -578,7 +626,7 @@ int read_mesh(const char* fn, mesh_t* data) {
     }
 
     /*
-    * Label for mesh destruction
+    * Label for cleanup (after errors or logical flow)
     */
     cleanup:
 

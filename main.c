@@ -21,7 +21,5 @@ int main() {
 
     mesh_write_to_file(&teapot, "output.txt");
 
-    fclose(output);
-
     return 0;
 }
