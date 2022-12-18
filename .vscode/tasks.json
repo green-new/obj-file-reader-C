@@ -8,9 +8,8 @@
                 "-fdiagnostics-color=always",
                 "-g",
                 "${file}",
-                "",
                 "-o",
-                "${fileDirname}\\${fileBasenameNoExtension}.exe"
+                "build\\main.exe"
             ],
             "options": {
                 "cwd": "${fileDirname}"
