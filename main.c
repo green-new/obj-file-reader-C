@@ -3,8 +3,6 @@
 
 int main() {
     mesh_t teapot;
-    FILE* output;
-    output = fopen("output.txt", "w");
     clock_t teapot_mesh_time_start = clock();
     clock_t teapot_mesh_time_end;
 
