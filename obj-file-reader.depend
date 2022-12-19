@@ -1,0 +1,11 @@
+# depslib dependency file v1.0
+1671416736 source:w:\programming\obj-file-reader\main.c
+	"obj_reader.h"
+	"time.h"
+
+1671416654 w:\programming\obj-file-reader\obj_reader.h
+	"stdio.h"
+	"stdlib.h"
+	"string.h"
+	<errno.h>
+
