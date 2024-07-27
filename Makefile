@@ -1,8 +1,10 @@
 CC:=gcc
-CFLAGS:=-g -Wall -std=c99 -pedantic
+CFLAGS:=-g -Wall -std=c99 -pedantic -O3
 LDLIBS:=
 LDFLAGS:= -Iinclude
 
+MODELD:=models/
+BIND:=bin/
 OBJD:=obj/
 SRCD:=src/
 SRC:=main.c utils.c obj.c mtl.c
@@ -10,6 +12,7 @@ SRC:=$(addprefix ${SRCD},${SRC})
 OBJ:=$(subst .c,.o,$(subst ${SRCD},${OBJD},${SRC}))
 
 OUTPUT:=main
+OUTPUT:=$(addprefix ${BIND},${OUTPUT})
 
 .PHONY: clean run
 
@@ -17,6 +20,8 @@ OUTPUT:=main
 
 main: ${OBJ}
 	${LINK.o} ${OBJ} -o ${OUTPUT}
+	mkdir ${BIND}/${MODELD}
+	cp -a ${MODELD}/. ${BIND}/${MODELD} 
 
 obj/%.o: src/%.c
 	${COMPILE.c} ${LDFLAGS} $< -o ${OBJD}/$*.o
@@ -24,6 +29,7 @@ obj/%.o: src/%.c
 clean:
 	-rm ${OBJ}
 	-rm ${OUTPUT}
+	-rm -r ${BIND}/*
 
 run:
 	./${OUTPUT}

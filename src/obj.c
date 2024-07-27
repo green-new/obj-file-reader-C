@@ -55,10 +55,11 @@ static uint32_t sizeof_typet(type_t t) {
 
 /**
  * @brief Get the face flag.
- * 
- * @param face_str_element The face element.
+ * Ensures face definitions across the file are consistent.
+ *
+ * @param face_str_element The face element. Usually "1/2/3".
  * @param line The line number.
- * @returns The flag.
+ * @returns The flag. The face flag is an integer.
  */
 static uint32_t get_face_flag(const char* face_str_element, uint32_t line) {
     const char* ptr = face_str_element;
@@ -103,7 +104,7 @@ static uint32_t get_face_flag(const char* face_str_element, uint32_t line) {
 
 /**
  * @brief Gets the objects info (number of components and their dimensions).
- * 
+ *
  * @param mesh The mesh object.
  * @param file The file object.
  * @param err_msg Output error message, if one is encountered.
@@ -160,16 +161,14 @@ static int obj_setinfo(mesh_t* mesh, FILE* file, char* err_msg) {
                         line_number, mesh->tex_dim, tmp);
                 return RETURN_CODE;
             }
-
             mesh->face_flag.flag = get_face_flag(original_string_for_face, line_number);
-
         } else if (strequ(type, "o") && !name_defined) {
             char* tmp_name = strtok(NULL, "\n");
             mesh->name = calloc(1, strlen(tmp_name));
             strcpy(mesh->name, tmp_name);
             name_defined = !name_defined;
         } else if (strequ(type, "mtllib")) {
-            char* tmp_name = strtok(NULL, "\n");
+            // char* tmp_name = strtok(NULL, "\n");
             // TODO: create a new entry in material library.
         }
     }
@@ -293,8 +292,9 @@ void obj_destroy(mesh_t* mesh) {
     }
 
     free(mesh->face_data);
-    if (mesh->name && !strequ(mesh->name, "none"))
+    if (mesh->name && !strequ(mesh->name, "")) {
         free(mesh->name);
+	}
 }
 
 void obj_init(mesh_t* mesh) {
@@ -314,7 +314,7 @@ void obj_init(mesh_t* mesh) {
 
     mesh->face_flag.flag = 0;
 
-    mesh->name = "none";
+    mesh->name = "";
 }
 
 int obj_read(const char* fn, mesh_t* mesh) {
@@ -442,12 +442,15 @@ int obj_read(const char* fn, mesh_t* mesh) {
                     buffer = strtok(NULL, "/");
                 }
             }
-            if (mesh->face_flag.flag & pos_flag)
+            if (mesh->face_flag.flag & pos_flag) {
                 memcpy(mesh->face_data[fi].indices, face_buffers.pos_idx_buffer, sizeof *face_buffers.pos_idx_buffer * mesh->face_dim);
-            if (mesh->face_flag.flag & tex_flag)
+			}
+            if (mesh->face_flag.flag & tex_flag) {
                 memcpy(mesh->face_data[fi].texs, face_buffers.tex_idx_buffer, sizeof *face_buffers.tex_idx_buffer * mesh->face_dim);
-            if(mesh->face_flag.flag & norm_flag)
+			}
+            if (mesh->face_flag.flag & norm_flag) {
                 memcpy(mesh->face_data[fi].norms, face_buffers.norm_idx_buffer, sizeof *face_buffers.norm_idx_buffer * mesh->face_dim);
+			}
 
             memset(face_buffers.face_str_buffer, 0, sizeof *face_buffers.face_str_buffer * mesh->face_dim);
             memset(face_buffers.pos_idx_buffer, 0, sizeof *face_buffers.pos_idx_buffer * mesh->face_dim);
@@ -465,16 +468,18 @@ int obj_read(const char* fn, mesh_t* mesh) {
             return RETURN_CODE;
         }
 
-        if (buffer_init(line_buffer_cpy, generic_buffer, dim, dataformat))
+        if (buffer_init(line_buffer_cpy, generic_buffer, dim, dataformat)) {
             continue;
+		}
 
         memcpy(*generic_member, generic_buffer, sizeof_typet(dataformat) * dim);
         memset(generic_buffer, 0, sizeof_typet(dataformat) * dim);
     }
 
     free(generic_buffer);
-    for (uint32_t i = 0; i < mesh->face_dim; i++)
+    for (uint32_t i = 0; i < mesh->face_dim; i++) {
         free(face_buffers.face_str_buffer[i]);
+	}
 
     free(face_buffers.face_str_buffer);
     free(face_buffers.pos_idx_buffer);
