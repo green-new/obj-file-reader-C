@@ -61,6 +61,7 @@ void buffer_fwrite(FILE* fptr, const void* data, const type_t type, const uint32
     fprintf(fptr, "[");
 	char* separator = "";
     for (uint32_t j = 0; j < dim; j++) {
+		fprintf(fptr, "%s", separator);
         switch (type) {
             case TYPE_FLOAT:
                 fprintf(fptr, "%f", ((double*)data)[j]);

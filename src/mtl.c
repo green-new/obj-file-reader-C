@@ -54,9 +54,10 @@ int mtlarr_read(const char* fn, mtlarr_t* arr) {
         mtl_t curr_mat;
         // TODO: bounds checks on certain values
         if (strequ(type, "newmtl")) {
-            arr->material_array[arr->used] = curr_mat;
+            arr->material_array[arr->used] = mtl_create();
+			char* name = strtok(line_buffer, NULL);
+			arr->material_array[arr->used].name = name;
             arr->used++;
-            curr_mat = mtl_create(strtok(line_buffer, NULL));
         } else if (strequ(type, "Ka")) {
             // TODO: support "xyz" input, not just "x y z"
             init_3f(curr_mat.ambient);

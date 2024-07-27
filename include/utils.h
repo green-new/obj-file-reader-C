@@ -48,6 +48,6 @@ void buffer_print(const void* data, const type_t type, const uint32_t dim);
  * @param dim The dimension of the data.
  * @param type The type of the data.
  */
-void buffer_fwrite(FILE* fptr, const void* data, const uint32_t dim, const type_t type);
+void buffer_fwrite(FILE* fptr, const void* data,  const type_t type, const uint32_t dim);
 
 #endif

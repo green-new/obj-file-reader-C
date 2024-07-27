@@ -212,8 +212,9 @@ void obj_print(const mesh_t* mesh) {
 void obj_fwrite(const mesh_t* mesh, const char* fn) {
 
     FILE* file = fopen(fn, "w");
-    if (!file)
+    if (!file) {
         return;
+	}
 
     fprintf(file, "*** Object Name: %s ***\n", mesh->name);
     fprintf(file, "*** Vertex Dimension: %d ***\n", mesh->vertex_dim);
@@ -225,7 +226,7 @@ void obj_fwrite(const mesh_t* mesh, const char* fn) {
         fprintf(file, "none\n");
     } else {
         for (uint32_t i = 0; i < mesh->num_vertices; i++) {
-            buffer_fwrite(file, mesh->vertex_data[i].pos, mesh->vertex_dim, TYPE_FLOAT);
+            buffer_fwrite(file, mesh->vertex_data[i].pos, TYPE_FLOAT, mesh->vertex_dim);
         }
     }
 
@@ -234,7 +235,7 @@ void obj_fwrite(const mesh_t* mesh, const char* fn) {
         fprintf(file, "none\n");
     } else {
         for (uint32_t i = 0; i < mesh->num_normals; i++) {
-            buffer_fwrite(file, mesh->normal_data[i].norm, mesh->vertex_dim, TYPE_FLOAT);
+            buffer_fwrite(file, mesh->normal_data[i].norm, TYPE_FLOAT, mesh->vertex_dim);
         }
     }
 
@@ -243,7 +244,7 @@ void obj_fwrite(const mesh_t* mesh, const char* fn) {
         fprintf(file, "none\n");
     } else {
         for (uint32_t i = 0; i < mesh->num_textures; i++) {
-            buffer_fwrite(file, mesh->texture_data[i].tex, mesh->tex_dim, TYPE_FLOAT);
+            buffer_fwrite(file, mesh->texture_data[i].tex, TYPE_FLOAT, mesh->tex_dim);
         }
     }
 
@@ -252,17 +253,17 @@ void obj_fwrite(const mesh_t* mesh, const char* fn) {
         fprintf(file, "*** Face %d ***\n", i+1);
         if (mesh->face_flag.flag & pos_flag) {
             fprintf(file, "Position Indices ->");
-            buffer_fwrite(file, mesh->face_data[i].indices, mesh->face_dim, TYPE_UINT);
+            buffer_fwrite(file, mesh->face_data[i].indices, TYPE_UINT, mesh->face_dim);
         }
 
         if (mesh->face_flag.flag & tex_flag) {
             fprintf(file, "Texture Indices ->");
-            buffer_fwrite(file, mesh->face_data[i].texs, mesh->face_dim, TYPE_UINT);
+            buffer_fwrite(file, mesh->face_data[i].texs, TYPE_UINT, mesh->face_dim);
         }
 
         if (mesh->face_flag.flag & norm_flag) {
             fprintf(file, "Normal Indices ->");
-            buffer_fwrite(file, mesh->face_data[i].norms, mesh->face_dim, TYPE_UINT);
+            buffer_fwrite(file, mesh->face_data[i].norms, TYPE_UINT, mesh->face_dim);
         }
     }
 
@@ -283,12 +284,15 @@ void obj_destroy(mesh_t* mesh) {
     }
     free(mesh->texture_data);
     for (uint32_t i = 0; i < mesh->num_faces; i++) {
-        if(mesh->face_flag.flag & pos_flag)
+        if (mesh->face_flag.flag & pos_flag) {
             free(mesh->face_data[i].indices);
-        if(mesh->face_flag.flag & tex_flag)
+		}
+        if (mesh->face_flag.flag & tex_flag) {
             free(mesh->face_data[i].texs);
-        if(mesh->face_flag.flag & norm_flag)
+		}
+        if (mesh->face_flag.flag & norm_flag) {
             free(mesh->face_data[i].norms);
+		}
     }
 
     free(mesh->face_data);
