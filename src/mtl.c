@@ -2,12 +2,12 @@
 // --------------------------------------------------------------
 // Implementation
 // --------------------------------------------------------------
-mtl_t mtl_create(const char* name) {
+mtl_t mtl_create(void) {
     mtl_t material = {
         .ambient = {0},
         .diffuse = {0},
         .illum = 0,
-        .name = calloc(1, strlen(name)),
+        .name = "",
         .optical_density = 0,
         .sharpness = 0,
         .specular = {0},
@@ -15,7 +15,6 @@ mtl_t mtl_create(const char* name) {
         .transmission_filter = {0},
         .transparency = 0
     };
-    strcpy(material.name, name);
     return material;
 }
 

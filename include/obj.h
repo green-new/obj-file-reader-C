@@ -13,36 +13,28 @@
 #include "utils.h"
 #include "defs.h"
 
-/**
- * @brief Represents a geometric vertex.
- * 
+/** Represents a geometric vertex.
  */
 typedef struct vertex {
     /* The position of this vertex. */
     double* pos;
 } vertex_t;
 
-/**
- * @brief Represents geometric texture coordinates.
- * 
+/** Represents geometric texture coordinates.
  */
 typedef struct texture {
     /* The texture coordinates. */
     double* tex;
 } texture_t;
 
-/**
- * @brief Represents geometric normal coordinates.
- * 
+/** Represents geometric normal coordinates.
  */
 typedef struct normal {
     /* The normal vector. */
     double* norm;
 } normal_t;
 
-/**
- * @brief Represents a geometric face with a list of indices.
- * 
+/** Represents a geometric face with a list of indices.
  */
 typedef struct face {
     /* The material this face uses. NULL for nothing. */
@@ -56,9 +48,7 @@ typedef struct face {
     uint32_t* norms;
 } face_t;
 
-/**
- * @brief Entirely represents a geometric object as a list of vertices, normals, texture coordinates and faces.
- * 
+/** Entirely represents a geometric object as a list of vertices, normals, texture coordinates and faces.
  */
 typedef struct mesh {
     /* The dimension of every face component. */
@@ -99,23 +89,23 @@ typedef struct mesh {
         /* Enumeration of each bit to be set to determine the face flag. */
         enum {
             /* 0b1. */
-            pos_flag    = (1 << 0),
+            pos_flag = (1 << 0),
             /* 0b10. */
-            tex_flag    = (1 << 1),
+            tex_flag = (1 << 1),
             /* 0b100. */
-            norm_flag   = (1 << 2)
+            norm_flag = (1 << 2)
         } flags;
     } face_flag;
 } mesh_t;
 
-/** @brief Prints the object's contents  to standard output.
+/** Prints the object's contents  to standard output.
  *
  * @param data Pointer to the object to print to screen.
  * @return void
  */
 void obj_print(const mesh_t* mesh);
 
-/** @brief Writes the mesh's contents to a provided file. Will overwrite or create a new file.
+/** Writes the mesh's contents to a provided file. Will overwrite or create a new file.
  *
  * @param fn Filename for the output file.
  * @param mesh_obj The mesh to write to the file.
@@ -123,7 +113,7 @@ void obj_print(const mesh_t* mesh);
  */
 void obj_fwrite(const mesh_t* mesh, const char* fn);
 
-/** @brief Reads a .obj file from the provided filename and stores the relevant data to a mesh_t object.
+/** Reads a .obj file from the provided filename and stores the relevant data to a mesh_t object.
  *
  * @param fn Filename to the .obj file.
  * @param data Pointer to the stack-allocated mesh object.
@@ -131,14 +121,14 @@ void obj_fwrite(const mesh_t* mesh, const char* fn);
  */
 int obj_read(const char* fn, mesh_t* mesh);
 
-/** @brief Initializes all values of the mesh object to 0.
+/** Initializes all values of the mesh object to 0.
  *
  * @param data Mesh object.
  * @return void
  */
 void obj_init(mesh_t* mesh);
 
-/** @brief Frees all data within this mesh object.
+/** Frees all data within this mesh object.
  *
  * @param data Mesh object.
  * @return void

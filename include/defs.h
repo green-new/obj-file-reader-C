@@ -3,9 +3,7 @@
 
 #define MAX_LINE_LEN 255
 
-/**
- * @brief An enumeration of integer return codes for this library. SUCCESS is always 0.
- * 
+/** An enumeration of integer return codes for this library. SUCCESS is always 0.
  */
 enum return_codes {
     SUCCESS = 0,
@@ -14,8 +12,7 @@ enum return_codes {
     INVALID_DIMS
 };
 
-/**
- * @brief Prints a readable description of a given return code.
+/** Prints a readable description of a given return code.
  * 
  * @param return_code An integer return code from some of this library's functions.
  * @return A readable string literal.

@@ -3,11 +3,6 @@
 
 #include "utils.h"
 
-/** Compares two strings for absolute equality.
- * @param str0 The first string.
- * @param str1 The second string.
- * @returns 0 on absolute equality (determined by strcmp in the standard library), and a non-zero value if nonequal.
-*/
 inline int strequ(const char* str0, const char* str1) {
     return strcmp(str0, str1) == 0;
 }
@@ -20,6 +15,7 @@ uint32_t buffer_init(char line[MAX_LINE_LEN], void* buffer, const uint32_t dim, 
     char* token = strtok(line, " ");
     for (uint32_t o = 0; o < dim; o++) {
         token = strtok(NULL, " ");
+		// Sets the last character of this token to NULL for atof, atoi purposes (is this required)?
         token[strcspn(token, "\n")] = '\0';
         switch(dataformat) {
             case TYPE_FLOAT:
@@ -39,9 +35,11 @@ uint32_t buffer_init(char line[MAX_LINE_LEN], void* buffer, const uint32_t dim, 
     return 0;
 }
 
-void buffer_print(const void* data, const type_t type, const uint32_t dim) {
+void buffer_print(const void* data, const type_t type, const uint32_t length) {
     printf("[");
-    for (uint32_t i = 0; i < dim; i++) {
+	char* separator = "";
+    for (uint32_t i = 0; i < length; i++) {
+		printf("%s", separator);
         switch(type) {
             case TYPE_FLOAT:
                 printf("%f", ((double*)data)[i]);
@@ -54,13 +52,14 @@ void buffer_print(const void* data, const type_t type, const uint32_t dim) {
             break;
             default: break;
         }
-        if (i != dim - 1) printf(", ");
+		separator = ", ";
     }
     printf("]\n");
 }
 
-void buffer_fwrite(FILE* fptr, const void* data, const uint32_t dim, const type_t type) {
+void buffer_fwrite(FILE* fptr, const void* data, const type_t type, const uint32_t dim) {
     fprintf(fptr, "[");
+	char* separator = "";
     for (uint32_t j = 0; j < dim; j++) {
         switch (type) {
             case TYPE_FLOAT:
@@ -73,8 +72,7 @@ void buffer_fwrite(FILE* fptr, const void* data, const uint32_t dim, const type_
                 fprintf(fptr, "%s", ((const char**)data)[j]);
             break;
         }
-        if (j != dim - 1)
-            fprintf(fptr, ", ");
+		separator = ", ";
     }
     fprintf(fptr, "]\n");
 }

@@ -10,7 +10,8 @@
 
 #define MTLARRAY_MAX 16
 
-/* Material data format as defined from http://paulbourke.net/dataformats/mtl/. */
+/** Material data format as defined from http://paulbourke.net/dataformats/mtl/. 
+*/
 typedef struct {
     char* name;
     double ambient[3];
@@ -30,39 +31,34 @@ typedef struct {
     uint8_t used;
 } mtlarr_t;
 
-/**
- * Creates a new material object by value.
+/** Creates a new, empty material object.
  * 
- * @returns The material by value.
+ * @returns The material.
  */
-mtl_t mtl_create();
+mtl_t mtl_create(void);
 
-/**
- * Destroys any heap allocated data in this material object.
+/** Destroys any heap allocated data in this material object.
  * 
  * @param material The material object.
  * @return void 
  */
 void mtl_destroy(mtl_t* material);
 
-/**
- * Prints the material to standard output.
+/** Prints the material to standard output.
  * 
  * @param mat The material to print.
  * @returns void
  */
 void mtl_print(mtl_t* mat);
 
-/**
- * Prints the material array to standard output.
+/** Prints the material array to standard output.
  * 
  * @param arr The material array.
  * @returns void
  */
 void mtlarr_print(mtlarr_t* arr);
 
-/** 
- * Reads the material from the provided filename.
+/** Reads the material from the provided filename.
  * @param fn  Filename for the material file.
  * @param material_array Pointer to the material array.
  * @returns Can return either: [MTL_SUCCESS, MTL_COULDNT_OPEN_FILE, MTL_OUT_OF_MEMORY].

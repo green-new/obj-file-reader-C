@@ -292,7 +292,7 @@ void obj_destroy(mesh_t* mesh) {
     }
 
     free(mesh->face_data);
-    if (mesh->name && !strequ(mesh->name, "")) {
+    if (mesh->name && !mesh->name) {
         free(mesh->name);
 	}
 }
@@ -322,6 +322,7 @@ int obj_read(const char* fn, mesh_t* mesh) {
     int RETURN_CODE = SUCCESS;
     char err_msg[256];
 
+	// TODO: Error callbacks
     FILE* file = fopen(fn, "r");
     if (!file) {
         printf("Error: invalid, inaccessible, unavailable, or nonexistent file \"%s\"\n", fn);
@@ -342,6 +343,7 @@ int obj_read(const char* fn, mesh_t* mesh) {
     } face_buffers;
     void* generic_buffer;
 
+	// Memory allocations
     // TODO: we exit without cleaning up. How can we do this properly?
     if (!(face_buffers.pos_idx_buffer = calloc(mesh->face_dim, sizeof *face_buffers.pos_idx_buffer)) ||
     !(face_buffers.tex_idx_buffer = calloc(mesh->face_dim, sizeof *face_buffers.tex_idx_buffer)) ||
@@ -422,8 +424,9 @@ int obj_read(const char* fn, mesh_t* mesh) {
             dataformat = TYPE_FLOAT;
             ni++;
         } else if (strequ(type, "f")) {
-            if (buffer_init(line_buffer_cpy, face_buffers.face_str_buffer, mesh->face_dim, TYPE_STR))
+            if (buffer_init(line_buffer_cpy, face_buffers.face_str_buffer, mesh->face_dim, TYPE_STR)) {
                 continue;
+			}
             for (uint32_t j = 0; j < mesh->face_dim; j++) {
                 char* buffer = strtok(face_buffers.face_str_buffer[j], "/");
                 if (mesh->face_flag.flag & pos_flag) {
@@ -451,7 +454,7 @@ int obj_read(const char* fn, mesh_t* mesh) {
             if (mesh->face_flag.flag & norm_flag) {
                 memcpy(mesh->face_data[fi].norms, face_buffers.norm_idx_buffer, sizeof *face_buffers.norm_idx_buffer * mesh->face_dim);
 			}
-
+			
             memset(face_buffers.face_str_buffer, 0, sizeof *face_buffers.face_str_buffer * mesh->face_dim);
             memset(face_buffers.pos_idx_buffer, 0, sizeof *face_buffers.pos_idx_buffer * mesh->face_dim);
             memset(face_buffers.tex_idx_buffer, 0, sizeof *face_buffers.tex_idx_buffer * mesh->face_dim);

@@ -33,8 +33,7 @@ int fstart(FILE* fptr);
 */
 uint32_t buffer_init(char line[MAX_LINE_LEN], void* buffer, const uint32_t dim, const type_t dataformat);
 
-/**
- * @brief Prints a dimension of numbers to standard output.
+/** Prints a dimension of numbers to standard output.
  * 
  * @param data The data to print.
  * @param type The format of the data.
@@ -42,8 +41,7 @@ uint32_t buffer_init(char line[MAX_LINE_LEN], void* buffer, const uint32_t dim, 
  */
 void buffer_print(const void* data, const type_t type, const uint32_t dim);
 
-/**
- * @brief Writes the buffer to the provided file. File must be at least on write mode.
+/** Writes the buffer to the provided file. File must be at least on write mode.
  * 
  * @param fptr The file pointer.
  * @param data The data to write to file.
