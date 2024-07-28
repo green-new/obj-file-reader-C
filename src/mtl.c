@@ -33,8 +33,27 @@ void mtlarr_destroy(mtlarr_t* arr) {
 }
 
 void mtl_print(mtl_t* mat) {
-    printf("Name: %s", mat->name);
-
+	if (mat) {
+		#define x 0
+		#define y 1
+		#define z 2
+		printf("Name: %s", mat->name);
+		printf("Ambient: [%f, %f, %f]", mat->ambient[x], mat->ambient[y], mat->ambient[z]);
+		printf("Diffuse: [%f, %f, %f]", mat->diffuse[x], mat->diffuse[y], mat->diffuse[z]);
+		printf("Specular: [%f, %f, %f]", mat->specular[x], mat->specular[y], mat->specular[z]);
+		printf("Transmission filter: [%f, %f, %f]", mat->transmission_filter[x], mat->transmission_filter[y], mat->transmission_filter[z]);
+		printf("Illum: %ud", mat->illum);
+		printf("Transparency: %f", mat->transparency);
+		printf("Specular exponent: %d", mat->specular_exponent);
+		printf("Sharpness: %d", mat->sharpness);
+		printf("Optical density: %d", mat->optical_density);		
+		#undef x
+		#undef y
+		#undef z
+	} else {
+		// TODO: Error callback
+		printf("Error: attempted to print material properties, was invalid");
+	}
 }
 
 int mtlarr_read(const char* fn, mtlarr_t* arr) {

@@ -3,7 +3,9 @@ This lightweight C library is used to read and parse .obj and .mtl files for the
 
 # Compilation
 Linux: Run the 'Makefile' with GNU's 'make' command with GCC.
+
 Windows: Run the 'compile.bat' batch executable.
+
 Releases: Download one of the releases to get a precompiled library.
 
 # Features
