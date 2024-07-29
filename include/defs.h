@@ -3,13 +3,26 @@
 
 #define MAX_LINE_LEN 255
 
+enum search_codes {
+	FOUND = 0,
+	NOT_FOUND = 1
+}
+
+enum capacity_codes {
+	EMPTY = 0,
+	NON_EMPTY = 1
+}
+
 /** An enumeration of integer return codes for this library. SUCCESS is always 0.
  */
 enum return_codes {
     SUCCESS = 0,
     OUT_OF_MEMORY,
     INVALID_FILE,
-    INVALID_DIMS
+    INVALID_DIMS,
+	NO_OP,
+	NULL_POINTER,
+	EMPTY_STRING
 };
 
 /** Prints a readable description of a given return code.
@@ -27,6 +40,12 @@ static inline char* errstr(int return_code) {
             return "Could not open or create file";
         case INVALID_DIMS:
             return "Invalid or inconsistent specified number of dimensions";
+		case: NO_OP:
+			return "Operation was a no-op";
+		case: NULL_POINTER:
+			return "Provided pointer was NULL";
+		case: EMPTY_STRING:
+			return "String was empty";
         default: break;
     }
     return "Undefined";

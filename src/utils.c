@@ -25,6 +25,7 @@ uint32_t buffer_init(char line[MAX_LINE_LEN], void* buffer, const uint32_t dim, 
                 ((uint32_t*)buffer)[o] = atoi(token);
             break;
             case TYPE_STR:
+				// Reallocates the at 'buffer' to handle the width of the provided string (e.g., the 'Cube' part of a 'o Cube' command).
                 ((char**)buffer)[o] = realloc(((char**)buffer)[o], strlen(token) + 1);
                 memset(((char**)buffer)[o], 0, sizeof *((char**)buffer)[o]);
                 strcpy(((char**)buffer)[o], token);
