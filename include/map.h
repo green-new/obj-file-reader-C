@@ -23,17 +23,17 @@
 
 
 typedef struct {
-	const char* key;
-	VALUE_TYPE* value;
+	const char* key;		// Heap allocated
+	VALUE_TYPE* value;  	// Heap allocated
 } map_pair;
 
 typedef struct {
-	map_pair* pairs;
+	map_pair* pairs;		// Heap allocated
 	uint32_t count;
 } map_bucket;
 
 typedef struct {
-	map_bucket* buckets;
+	map_bucket* buckets;	// Heap allocated
 	uint32_t count;
 } MAP_NAME;
 

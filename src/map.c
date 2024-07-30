@@ -68,7 +68,18 @@ static map_pair* create_pair(const char* key, const VALUE_TYPE* value) {
 	return pair;
 }
 
-/** Creates an empty bucket. NULL if it cannot be created. Does not create the pairs array.
+/** Destroys a given pair.
+*/
+static void destroy_pair(map_pair* pair) {
+	if (!pair) {
+		return;
+	}
+	free((void*)pair->key);	// Must be case to (void*) because key is a (const char*) and technically cannot be modified
+	free(pair->value);
+	free(pair);
+}
+
+/** Creates an empty bucket not bound to any map. NULL if it cannot be created. Does not create the pairs array.
 */
 static map_bucket* create_bucket() {
 	map_bucket* bucket = calloc(1, sizeof(map_bucket));
@@ -76,12 +87,72 @@ static map_bucket* create_bucket() {
 	return bucket;
 }
 
-static void swap_pair(map_pair** restrict pair1, map_pair** restrict pair2) {
-	map_pair** temp = pair1;
-	*pair = *pair2;
-	*pari2 = *map_pair;
+static void destroy_bucket(map_bucket* bucket) {
+	if (!bucket) {
+		return;
+	}
+	for (size_t i = 0; i < bucket->count; i++) {
+		free(
+	}
+	free(bucket);
 }
 
+static void destroy_bucket_in_map(MAP_NAME* map, size_t index) {
+	if (index >= map->count) { // No buckets in this map
+		return;
+	}
+	map_bucket* bucket = map->buckets[index];
+	if (!bucket) { // Does not exist
+		return;
+	}
+	for (size_t i = 0; i < bucket->count; i++) { // Free pairs
+		map_pair* pair = bucket->pairs[i];
+		if (pair) {
+			free(pair->key);
+			free(pair->value);
+		}
+		free(pair);
+	}
+	free(bucket);
+}
+
+/** Pushes an already created pair into the end of the bucket.
+*/
+static void push_pair(map_bucket* bucket, map_pair* pair) {
+	bucket->pairs[++bucket->count - 1] = pair; // Create a pair at the end of the bucket
+}
+
+/** Swap the given pairs. 
+*/
+static void swap_pair(map_pair** restrict pair1, map_pair** restrict pair2) {
+	map_pair* temp = *pair1;
+	*pair = *pair2;
+	*pair2 = temp;
+}
+
+/** Swap the given pair with the last pair in the list, and delete it.
+*/
+static void delete_pair_in_bucket(map_bucket* bucket, size_t index) {
+	if (bucket->count == 0) {
+		return;
+	}
+	map_pair* pair = bucket->pairs[index];
+	if (bucket->count == 1) {
+		free(pair);
+		bucket->count--;
+		return;
+	} 
+	// Bucket count is 2 or more.
+	map_pair* last = bucket->pairs[bucket->count - 1];
+	swap_pair(&pair, &last);
+	free(last->key);
+	free(last->value);
+	free(last);
+}
+
+// Rehashes the map.
+// Does not create a new map; uses the original map.
+// Does not increase capacity. Map capacity must be increased before calling this, or else its effectively a no-op.
 static void map_rehash(MAP_NAME* map) {
 	for (uint32_t i = 0; i < map->count; i++) {
 		map_bucket** bucket = &map->buckets[i];
@@ -89,17 +160,17 @@ static void map_rehash(MAP_NAME* map) {
 			continue;
 		}
 		for (uint32_t j = 0; j < bucket->count; j++) {
-			map_pair** pair = &bucket->pairs[j];
+			map_pair* pair = bucket->pairs[j];
 			const char* key = pair->key;
-			if (!(*pair)) {
+			if (!pair) {
 				continue;
 			}
 			uint32_t index = hash(key) % map->count;
-			map_bucket** new_bucket = &map->buckets[index];
-			if (!(*new_bucket)) {
+			map_bucket* new_bucket = map->buckets[index];
+			if (!new_bucket) {
 				map->buckets[index] = create_bucket();
 			}
-			if (*bucket != *new_bucket) {
+			if (bucket != new_bucket) {
 				if (bucket->count) {
 					
 				}
@@ -151,8 +222,9 @@ int map_destroy(MAP_TYPE* map) {
 			}
 			free(pair->key);
 			free(pair->value);
+			free(pair);
 		}
-		free(bucket->pairs);
+		free(bucket->pairs); // TODO: See if this tries to free NULL at the end of freeing from above
 	}
 	return SUCCESS;
 }
@@ -193,7 +265,7 @@ int map_insert(MAP_NAME* map, const char* key, const VALUE_TYPE* value) {
 		return OUT_OF_MEMORY;
 	}
 	if (map->count == 0) { // No buckets
-		map->count += 1;
+		map->count++;
 		map_bucket* bucket = create_bucket();
 		if (!bucket) {
 			return OUT_OF_MEMORY;
@@ -214,6 +286,7 @@ int map_insert(MAP_NAME* map, const char* key, const VALUE_TYPE* value) {
 		} else { // Bucket exists, and more than 0 pairs exist in this bucket.
 			
 		}
+	// Not enough buckets, increase capacity and rehash.
 	} else {
 		// Create 32 new buckets
 		map->buckets = realloc(
