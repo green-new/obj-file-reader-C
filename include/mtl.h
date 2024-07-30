@@ -8,27 +8,45 @@
 #include "defs.h"
 #include "utils.h"
 
+// Definitions and includes for map.h
+#define MAP_NAME mat_map
+#define VALUE_TYPE mtl_t
+#include "map.h"
+
 /** Material data format as defined from http://paulbourke.net/dataformats/mtl/. 
 */
 typedef struct {
+	/** Name of this material type. */
     char* name;
+	/** Specifies the ambient reflectivity using rgb values scaled from [0, 1]. */
     double ambient[3];
+	/** Specifies the diffuse reflectivity using rgb values scaled from [0, 1]. */
     double diffuse[3];
+	/** Specifies the specular reflectivity using rgb values scaled from [0, 1]. */
     double specular[3];
+	/** Specifies the transmission filter of this material using rgb values scaled from [0, 1]. */
     double transmission_filter[3];
+	/** Specifies the illumination model to use. Value between 0-10, see complete descriptions in illum.h. */
     uint32_t illum;
+	/** Specifies the "dissolve", or more well known as transparency, of this material. */
     double transparency;
+	/** The "halo" flag behind the "d" command. Specifies that the material's transparency should be dependent on a surface's orientation with regards to the world camera. */
+	int halo;
+	/** Specifies the specular exponent for this material. */
     uint32_t specular_exponent;
+	/** Specifies the sharpness of reflections of this material. */
     uint32_t sharpness;
+	/** Specifies the optical density for this material. Also known as "index of refraction". */
     double optical_density;
 } mtl_t;
 
 /** A library of material types.
 */
 typedef struct {
+	/** Value of this material library. */
     char* name;
-    mtl_t* mtl_arr;
-    uint8_t used;
+	/** Map of [material name, material] key/value pairs. */
+    mat_map map;
 } mtllib_t;
 
 /** Creates a new, empty material object.
