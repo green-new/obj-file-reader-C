@@ -3,30 +3,40 @@
 
 #include "utils.h"
 
-inline int strequ(const char* str0, const char* str1) {
+inline int 
+strequ(const char* str0, const char* str1) {
     return strcmp(str0, str1) == 0;
 }
 
-inline int fstart(FILE* fptr) {
+inline int 
+fstart(FILE* fptr) {
     return fseek(fptr, 0, SEEK_SET);
 }
 
-uint32_t buffer_init(char line[MAX_LINE_LEN], void* buffer, const uint32_t dim, const type_t dataformat) {
+uint32_t 
+buffer_init(char line[MAX_LINE_LEN], 
+void* buffer, 
+const uint32_t dim, 
+const type_t dataformat) {
     char* token = strtok(line, " ");
     for (uint32_t o = 0; o < dim; o++) {
         token = strtok(NULL, " ");
-		// Sets the last character of this token to NULL for atof, atoi purposes (is this required)?
+		// Sets the last character of this token to NULL for atof, atoi 
+		// purposes (is this required)?
         token[strcspn(token, "\n")] = '\0';
         switch(dataformat) {
             case TYPE_FLOAT:
-                ((double*)buffer)[o] = atof(token);
+                ((float*)buffer)[o] = atof(token);
             break;
             case TYPE_UINT:
                 ((uint32_t*)buffer)[o] = atoi(token);
             break;
             case TYPE_STR:
-				// Reallocates the at 'buffer' to handle the width of the provided string (e.g., the 'Cube' part of a 'o Cube' command).
-                ((char**)buffer)[o] = realloc(((char**)buffer)[o], strlen(token) + 1);
+				// Reallocates the at 'buffer' to handle the width of the 
+				// provided string (e.g., the 'Cube' part of a 'o Cube' 
+				// command).
+                ((char**)buffer)[o] = 
+					realloc(((char**)buffer)[o], strlen(token) + 1);
                 memset(((char**)buffer)[o], 0, sizeof *((char**)buffer)[o]);
                 strcpy(((char**)buffer)[o], token);
             break;
@@ -36,7 +46,8 @@ uint32_t buffer_init(char line[MAX_LINE_LEN], void* buffer, const uint32_t dim, 
     return 0;
 }
 
-void buffer_print(const void* data, const type_t type, const uint32_t length) {
+void 
+buffer_print(const void* data, const type_t type, const uint32_t length) {
     printf("[");
 	char* separator = "";
     for (uint32_t i = 0; i < length; i++) {
@@ -58,7 +69,11 @@ void buffer_print(const void* data, const type_t type, const uint32_t length) {
     printf("]\n");
 }
 
-void buffer_fwrite(FILE* fptr, const void* data, const type_t type, const uint32_t dim) {
+void 
+buffer_fwrite(FILE* fptr, 
+const void* data,
+const type_t type, 
+const uint32_t dim) {
     fprintf(fptr, "[");
 	char* separator = "";
     for (uint32_t j = 0; j < dim; j++) {

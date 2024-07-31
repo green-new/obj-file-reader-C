@@ -1,14 +1,57 @@
 #include "mtl.h"
-// --------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
 // Implementation
-// --------------------------------------------------------------
+// -----------------------------------------------------------------------------
+
+typedef struct {
+	/** Name of this material type. */
+    char* name;
+	/** Specifies the ambient reflectivity using rgb values 
+	* scaled from [0, 1]. */
+    double ambient[3];
+	/** Specifies the diffuse reflectivity using rgb values scaled from 
+	* [0, 1]. */
+    double diffuse[3];
+	/** Specifies the specular reflectivity using rgb values scaled from 
+	* [0, 1]. */
+    double specular[3];
+	/** Specifies the transmission filter of this material using rgb values 
+	* scaled from [0, 1]. */
+    double tm_filter[3];
+	/** Specifies the illumination model to use. Value between 0-10, see 
+	* complete descriptions in illum.h. */
+    uint32_t illum;
+	/** Specifies the "dissolve", or more well known as transparency, of this 
+	* material. */
+    double transparency;
+	/** The "halo" flag behind the "d" command. Specifies that the material's 
+	* transparency should be dependent on a surface's orientation with regards 
+	* to the world camera. */
+	int halo;
+	/** Specifies the specular exponent for this material. */
+    uint32_t specular_exponent;
+	/** Specifies the sharpness of reflections of this material. */
+    uint32_t sharpness;
+	/** Specifies the optical density for this material. Also known as "index 
+	* of refraction". */
+    double optical_density;
+} mtl_t;
+
+typedef struct {
+	/** Value of this material library. */
+    char* name;
+	/** Map of [material name, material] key/value pairs. */
+    mat_map map;
+} mtllib_t;
+
 mtl_t mtl_create(void) {
     mtl_t material = {
         .name = "",
         .ambient = {0.0f, 0.0f, 0.0f},
         .diffuse = {0.0f, 0.0f, 0.0f},
         .specular = {0.0f, 0.0f, 0.0f},
-        .transmission_filter = {0.0f, 0.0f, 0.0f},
+        .tm_filter = {0.0f, 0.0f, 0.0f},
         .illum = 0,
         .transparency = 0,
         .specular_exponent = 0,
@@ -30,10 +73,14 @@ void mtl_print(mtl_t* mat) {
 		#define y 1
 		#define z 2
 		printf("Material Name: \"%s\"", mat->name);
-		printf("Ambient: [%f, %f, %f]", mat->ambient[x], mat->ambient[y], mat->ambient[z]);
-		printf("Diffuse: [%f, %f, %f]", mat->diffuse[x], mat->diffuse[y], mat->diffuse[z]);
-		printf("Specular: [%f, %f, %f]", mat->specular[x], mat->specular[y], mat->specular[z]);
-		printf("Transmission filter: [%f, %f, %f]", mat->transmission_filter[x], mat->transmission_filter[y], mat->transmission_filter[z]);
+		printf("Ambient: [%f, %f, %f]", 
+			mat->ambient[x], mat->ambient[y], mat->ambient[z]);
+		printf("Diffuse: [%f, %f, %f]", 
+			mat->diffuse[x], mat->diffuse[y], mat->diffuse[z]);
+		printf("Specular: [%f, %f, %f]", 
+			mat->specular[x], mat->specular[y], mat->specular[z]);
+		printf("Transmission filter: [%f, %f, %f]", 
+			mat->tm_filter[x], mat->tm_filter[y], mat->tm_filter[z]);
 		printf("Illum: %ud", mat->illum);
 		printf("Transparency: %f", mat->transparency);
 		printf("Specular exponent: %d", mat->specular_exponent);
@@ -44,31 +91,37 @@ void mtl_print(mtl_t* mat) {
 		#undef z
 	} else {
 		// TODO: Error callback
-		printf("Error: attempted to output material properties to standard output, but material object was invalid or deleted");
+		printf("Error: attempted to output material properties to standard \
+		output, but material object was invalid or deleted");
 	}
 }
 
-void mtl_fprint(FILE* fptr, mtl_t* mat) {
-	if (mat && fptr) {
+void mtl_fprint(FILE* file, mtl_t* mat) {
+	if (mat && file) {
 		#define x 0
 		#define y 1
 		#define z 2
-		fprintf(fptr, "Material Name: \"%s\"", mat->name);
-		fprintf(fptr, "Ambient: [%f, %f, %f]", mat->ambient[x], mat->ambient[y], mat->ambient[z]);
-		fprintf(fptr, "Diffuse: [%f, %f, %f]", mat->diffuse[x], mat->diffuse[y], mat->diffuse[z]);
-		fprintf(fptr, "Specular: [%f, %f, %f]", mat->specular[x], mat->specular[y], mat->specular[z]);
-		fprintf(fptr, "Transmission filter: [%f, %f, %f]", mat->transmission_filter[x], mat->transmission_filter[y], mat->transmission_filter[z]);
-		fprintf(fptr, "Illum: %ud", mat->illum);
-		fprintf(fptr, "Transparency: %f", mat->transparency);
-		fprintf(fptr, "Specular exponent: %d", mat->specular_exponent);
-		fprintf(fptr, "Sharpness: %d", mat->sharpness);
-		fprintf(fptr, "Optical density: %d", mat->optical_density);		
+		fprintf(file, "Material Name: \"%s\"", mat->name);
+		fprintf(file, "Ambient: [%f, %f, %f]",
+			mat->ambient[x], mat->ambient[y], mat->ambient[z]);
+		fprintf(file, "Diffuse: [%f, %f, %f]", 
+			mat->diffuse[x], mat->diffuse[y], mat->diffuse[z]);
+		fprintf(file, "Specular: [%f, %f, %f]", 
+			mat->specular[x], mat->specular[y], mat->specular[z]);
+		fprintf(file, "Transmission filter: [%f, %f, %f]", 
+			mat->tm_filter[x], mat->tm_filter[y], mat->tm_filter[z]);
+		fprintf(file, "Illum: %ud", mat->illum);
+		fprintf(file, "Transparency: %f", mat->transparency);
+		fprintf(file, "Specular exponent: %d", mat->specular_exponent);
+		fprintf(file, "Sharpness: %d", mat->sharpness);
+		fprintf(file, "Optical density: %d", mat->optical_density);		
 		#undef x
 		#undef y
 		#undef z
 	} else {
 		// TODO: Error callback
-		printf("Error: attempted to output material properties to file, but material object was invalid or deleted");
+		printf("Error: attempted to output material properties to file, but \
+		material object was invalid or deleted");
 	}
 }
 
@@ -102,20 +155,22 @@ void mtllib_print(mtllib_t* lib) {
 		}
 	} else {
 		// TODO: Error callback
-		printf("Error: attempted to output material library properties to standard output, but material library object was invalid or deleted");
+		printf("Error: attempted to output material library properties to \
+		standard output, but material library object was invalid or deleted");
 	}
 }
 
-void mtllib_fprint(FILE* fptr, mtllib_t* lib) {
+void mtllib_fprint(FILE* file, mtllib_t* lib) {
 	if (lib) {
 		printf("Library Name: \"%s\"", lib->name);
 		printf("Used: %ud", used);
 		for (uint8_t i = 0; i < used; i++) {
-			mtl_fprint(fptr, &lib->mtl_arr[i]);
+			mtl_fprint(file, &lib->mtl_arr[i]);
 		}
 	} else {
 		// TODO: Error callback
-		printf("Error: attempted to output material library properties to file, but material library object was invalid or deleted");
+		printf("Error: attempted to output material library properties to \
+		file, but material library object was invalid or deleted");
 	}
 }
 
@@ -149,7 +204,7 @@ int mtllib_read(const char* fn, mtllib_t* arr) {
         } else if (strequ(type, "Ks")) {
             init_3f(curr_mat.specular);
         } else if (strequ(type, "Tf")) {
-            init_3f(curr_mat.transmission_filter);
+            init_3f(curr_mat.tm_filter);
         } else if (strequ(type, "illum")) {
             init_1u(&curr_mat.illum);
         } else if(strequ(type, "d")) {

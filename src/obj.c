@@ -1,9 +1,11 @@
 #include "obj.h"
 
-// --------------------------------------------------------------
-// Utility static functions
-// --------------------------------------------------------------
-/** Gets the dimension of the mesh component based on the ASCII text. Each value in the component must be separated by a single space character " ".
+// -----------------------------------------------------------------------------
+// Static utility
+// -----------------------------------------------------------------------------
+
+/** Gets the dimension of the mesh component based on the ASCII text. Each value
+*  in the component must be separated by a single space character " ".
  * @param buffer The text line fetched by the .obj file.
  * @returns The number of dimensions in this line.
 */
@@ -18,7 +20,8 @@ static uint32_t get_dim(char buffer[MAX_LINE_LEN]) {
     return dim;
 }
 
-/** Checks if the retrieved dimension from the raw text matches the expected dimension.
+/** Checks if the retrieved dimension from the raw text matches the expected 
+ * dimension.
  * @param expected The expected dimension.
  * @param retrieved The retrieved dimension number.
  * @param line The line fetched from the .obj file.
@@ -33,9 +36,11 @@ static int check_dim(uint32_t* expected, uint32_t* retrieved, char* line) {
     return SUCCESS;
 }
 
-/** Determines the byte size of what the type represents. For example, a type_t of TYPE_UINT will return sizeof(uint32_t).
+/** Determines the byte size of what the type represents. For example, a type_t 
+ * of TYPE_UINT will return sizeof(uint32_t).
  * @param t The type to find the size of.
- * @returns The byte size of the represented primitive, or 0 if the type could not be determined.
+ * @returns The byte size of the represented primitive, or 0 if the type could 
+ * not be determined.
 */
 static uint32_t sizeof_typet(type_t t) {
     switch(t) {
@@ -43,7 +48,7 @@ static uint32_t sizeof_typet(type_t t) {
             return sizeof(uint32_t);
         break;
         case TYPE_FLOAT:
-            return sizeof(double);
+            return sizeof(float);
         break;
         case TYPE_STR:
             return sizeof(const char*);
@@ -73,8 +78,10 @@ static uint32_t get_face_flag(const char* face_str_element, uint32_t line) {
         while (*ptr != ' ' && *ptr != '\n' && *ptr != '\0') {
             flag = 1 << shift;
             size = 0;
-            // Keep counting even if we are on a space, and the last character is 'f'.
-            while (*ptr != '/' && *ptr != '\0' && *ptr != '\n' && (*ptr != ' ' || *(ptr - 1) == 'f')) {
+            // Keep counting even if we are on a space, and the last character 
+			// is 'f'.
+            while (*ptr != '/' && *ptr != '\0' && *ptr != '\n' && (*ptr != ' ' 
+				|| *(ptr - 1) == 'f')) {
                 ptr++;
                 size++;
             }
@@ -90,7 +97,8 @@ static uint32_t get_face_flag(const char* face_str_element, uint32_t line) {
             prev_flag = curr_flag;
         }
         if (prev_flag != curr_flag) {
-            printf("Error: inconsistent face definitions at line %d, flag was %d, expected %d\n", line, curr_flag, prev_flag);
+            printf("Error: inconsistent face definitions at line %d, flag was \
+				%d, expected %d\n", line, curr_flag, prev_flag);
             return 0;
         }
         prev_flag = curr_flag;
@@ -136,22 +144,26 @@ static int obj_setinfo(mesh_t* mesh, FILE* file, char* err_msg) {
         if (strequ(type, "v")) {
             tmp_num_verts++;
             if ((RETURN_CODE = check_dim(&mesh->vertex_dim, &tmp, original_string_for_dim)) != SUCCESS) {
-                sprintf(err_msg, "Error: mismatch of vertex dimension at line %d: expected %d, got %d vertices\n",
+                sprintf(err_msg, "Error: mismatch of vertex dimension at line \
+					%d: expected %d, got %d vertices\n",
                     line_number, mesh->vertex_dim, tmp);
                 return RETURN_CODE;
             }
         } else if (strequ(type, "vn")) {
             tmp_num_norms++;
             if ((RETURN_CODE = check_dim(&mesh->vertex_dim, &tmp, original_string_for_dim)) != SUCCESS) {
-                sprintf(err_msg, "Error: mismatch of vertex normal dimension at line %d: expected %d, got %d vertex normals (must be same dimensions as vertex dimension)\n",
-                        line_number, mesh->vertex_dim, tmp);
+                sprintf(err_msg, "Error: mismatch of vertex normal dimension \
+					at line %d: expected %d, got %d vertex normals (must be same \
+					dimensions as vertex dimension)\n",
+                    line_number, mesh->vertex_dim, tmp);
                 return RETURN_CODE;
             }
         } else if (strequ(type, "vt")){
             tmp_num_texs++;
             if ((RETURN_CODE = check_dim(&mesh->tex_dim, &tmp, original_string_for_dim)) != SUCCESS) {
-                sprintf(err_msg, "Error: mismatch of vertex texture dimension at line %d: expected %d, got %d vertex texture components\n",
-                        line_number, mesh->tex_dim, tmp);
+                sprintf(err_msg, "Error: mismatch of vertex texture dimension \
+					at line %d: expected %d, got %d vertex texture components\n"
+					, line_number, mesh->tex_dim, tmp);
                 return RETURN_CODE;
             }
         } else if (strequ(type, "f")) {
@@ -180,9 +192,9 @@ static int obj_setinfo(mesh_t* mesh, FILE* file, char* err_msg) {
     return RETURN_CODE;
 }
 
-// --------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // Implementation
-// --------------------------------------------------------------
+// -----------------------------------------------------------------------------
 void obj_print(const mesh_t* mesh) {
     for (uint32_t i = 0; i < mesh->num_vertices; i++) {
         buffer_print(mesh->vertex_data[i].pos, TYPE_FLOAT, mesh->vertex_dim);
@@ -318,7 +330,7 @@ void obj_init(mesh_t* mesh) {
 
     mesh->face_flag.flag = 0;
 
-    mesh->name = "";
+    mesh->name = NULL;
 }
 
 int obj_read(const char* fn, mesh_t* mesh) {
@@ -358,42 +370,42 @@ int obj_read(const char* fn, mesh_t* mesh) {
     !(mesh->normal_data = calloc(mesh->num_normals, sizeof(normal_t))) ||
     !(mesh->texture_data = calloc(mesh->num_textures, sizeof(texture_t))) ||
     !(mesh->face_data = calloc(mesh->num_faces, sizeof(face_t)))) {
-        return OUT_OF_MEMORY;
+        return MEMORY_REFUSED;
     }
     for (uint32_t i = 0; i < mesh->face_dim; i++) {
         if (!(face_buffers.face_str_buffer[i] = calloc(mesh->face_dim, sizeof *face_buffers.face_str_buffer[i]))) {
-            return OUT_OF_MEMORY;
+            return MEMORY_REFUSED;
         }
     }
     for (uint32_t i = 0; i < mesh->num_vertices; i++) {
         if (!(mesh->vertex_data[i].pos = calloc(mesh->vertex_dim, sizeof *mesh->vertex_data[i].pos))) {
-            return OUT_OF_MEMORY;
+            return MEMORY_REFUSED;
         }
     }
     for (uint32_t i = 0; i < mesh->num_normals; i++) {
         if (!(mesh->normal_data[i].norm = calloc(mesh->vertex_dim, sizeof *mesh->normal_data[i].norm))) {
-            return OUT_OF_MEMORY;
+            return MEMORY_REFUSED;
         }
     }
     for (uint32_t i = 0; i < mesh->num_textures; i++) {
         if (!(mesh->texture_data[i].tex = calloc(mesh->tex_dim, sizeof *mesh->texture_data[i].tex))) {
-            return OUT_OF_MEMORY;
+            return MEMORY_REFUSED;
         }
     }
     for (uint32_t i = 0; i < mesh->num_faces; i++) {
         if (mesh->face_flag.flag & pos_flag) {
             if (!(mesh->face_data[i].indices = calloc(mesh->face_dim, sizeof *mesh->face_data[i].indices))) {
-                return OUT_OF_MEMORY;
+                return MEMORY_REFUSED;
             }
         }
         if (mesh->face_flag.flag & norm_flag) {
             if (!(mesh->face_data[i].norms = calloc(mesh->face_dim, sizeof *mesh->face_data[i].norms))) {
-                return OUT_OF_MEMORY;
+                return MEMORY_REFUSED;
             }
         }
         if (mesh->face_flag.flag & tex_flag) {
             if (!(mesh->face_data[i].texs = calloc(mesh->face_dim, sizeof *mesh->face_data[i].texs))) {
-                return OUT_OF_MEMORY;
+                return MEMORY_REFUSED;
             }
         }
     }
@@ -471,7 +483,7 @@ int obj_read(const char* fn, mesh_t* mesh) {
         }
 
         if (!(generic_buffer = realloc(generic_buffer, sizeof_typet(dataformat) * dim))) {
-            RETURN_CODE = OUT_OF_MEMORY;
+            RETURN_CODE = MEMORY_REFUSED;
             return RETURN_CODE;
         }
 
