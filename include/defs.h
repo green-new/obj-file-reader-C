@@ -10,6 +10,8 @@
 
 #define MAX_LINE_LEN 255
 
+#include <limits.h>
+
 #if CHAR_BIT != 8
 #error "Unsupported char size"
 #endif
