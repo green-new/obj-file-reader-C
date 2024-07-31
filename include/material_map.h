@@ -9,17 +9,10 @@
 #include <string.h>
 #include "defs.h"
 #include "utils.h"
+#include "mtl.h"
 
-#ifndef MAP_H_INCLUDED
-#define MAP_H_INCLUDED
-
-#ifndef VALUE_TYPE
-#error VALUE_TYPE undefined
-#endif
-
-#ifndef MAP_NAME
-#define MAP_NAME map
-#endif
+#ifndef MATMAP_H_INCLUDED
+#define MATMAP_H_INCLUDED
 
 /** @struct map_pair
  * @brief A structure containing a [key, value] pair for use in a map.
@@ -31,7 +24,7 @@ map_pair;
 typedef struct 
 map_bucket;
 typedef struct 
-MAP_NAME;
+mat_map;
 
 /** Creates an empty map with a specific initial capacity.
  * @param map Pointer to the map to initialize. Cannot be NULL.
@@ -40,20 +33,20 @@ MAP_NAME;
  * @return [SUCCESS, MEMORY_REFUSED]
  */
 int 
-map_create(MAP_TYPE* map, uint32_t capacity, float load_factor);
+map_create(mat_map* map, uint32_t capacity, float load_factor);
 
 /** Creates an empty map with an initial capacity of 16 and load_factor of 0.75.
  * @param map Pointer to the map to initialize.
  * @return [SUCCESS, MEMORY_REFUSED]
  */
 int 
-map_create(MAP_TYPE* map);
+map_create(mat_map* map);
 
 /** Frees a map.
  * @param map The map to free.
  */
 void 
-map_destroy(MAP_TYPE* map);
+map_destroy(mat_map* map);
 
 /** Copies the contents of map2 into map1. Each pointer cannot point to the same object or it is undefined behavior.
  * @param map1 The map to be modified. Cannot be null. Cannot be == to map2.
@@ -61,7 +54,7 @@ map_destroy(MAP_TYPE* map);
  * @return [SUCCESS, MEMORY_REFUSED]
  */
 int 
-map_copy(MAP_NAME* map1, const MAP_NAME* map2);
+map_copy(mat_map* map1, const mat_map* map2);
 
 /**
  * Inserts a [key, value] pair into the map. 
@@ -73,7 +66,7 @@ map_copy(MAP_NAME* map1, const MAP_NAME* map2);
  * @return [SUCCESS, MEMORY_REFUSED]
  */
 int 
-map_insert(MAP_NAME* map, const char* key, const VALUE_TYPE* value);
+map_insert(mat_map* map, const char* key, const mtl_t* value);
 
 /** Erases & frees the value at the given key in the map.
  * @param map The map.
@@ -81,7 +74,7 @@ map_insert(MAP_NAME* map, const char* key, const VALUE_TYPE* value);
  * @return [SUCCESS, NO_OP]
  */
 int 
-map_erase(MAP_NAME* map, const char* key);
+map_erase(mat_map* map, const char* key);
 
 /** Retrives the object at the specified key in the map.
  * @param map The map.
@@ -90,26 +83,26 @@ map_erase(MAP_NAME* map, const char* key);
  * @return [FOUND, NOT_FOUND]
  */
 int 
-map_at(MAP_NAME* map, const char* key, VALUE_TYPE* out);
+map_at(mat_map* map, const char* key, mtl_t* out);
 
 /** Determines if this map is empty or not.
  * @param map The map.
  * @return 1 if empty, 0 if nonempty.
  */
 int 
-map_empty(MAP_NAME* map);
+map_empty(mat_map* map);
 
 /** Returns the number of [key, value] pairs in this map.
  * @param map The map.
  * @return The number of pairs in this map.
  */
 size_t 
-map_size(MAP_NAME* map);
+map_size(mat_map* map);
 
 /** Clears this map of all elements.
  * @param The map.
  */
 void 
-map_clear(MAP_NAME* map);
+map_clear(mat_map* map);
 
 #undef MAP_H_INCLUDED
