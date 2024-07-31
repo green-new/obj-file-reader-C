@@ -42,16 +42,6 @@
 #define W 3
 #endif
 
-enum search_codes {
-	FOUND = 0,
-	NOT_FOUND = 1
-}
-
-enum capacity_codes {
-	EMPTY = 0,
-	NON_EMPTY = 1
-}
-
 /** @brief Integer return codes for this library.
  * Return codes for this library as integers. A successful exit is always 0.
  */
@@ -72,7 +62,7 @@ static inline char* errstr(int return_code) {
     switch (return_code) {
         case SUCCESS:
             return "Successful termination";
-        case OUT_OF_MEMORY:
+        case MEMORY_REFUSED:
             return "Out of memory";
         case INVALID_FILE:
             return "Could not open or create file";
