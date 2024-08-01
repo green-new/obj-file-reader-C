@@ -1,4 +1,4 @@
-#include "map.h"
+#include "material_map.h"
 
 #ifdef MAP_IMPL
 
@@ -72,7 +72,7 @@ destroy_pair(map_pair* pair) {
 	free(pair->value);
 }
 
-/** Destroys a given bucket. Assumes "bucket" is non-null.
+/** Destroys a given bucket's contents. Assumes "bucket" is non-null.
 * Destroys the "pairs" within the bucket and sets their properties to NULL, 
 * and sets the "count" to "0".
 * @param bucket The bucket to destroy. Assumes it is valid.
@@ -95,7 +95,7 @@ destroy_bucket(map_bucket* bucket) {
 	bucket->count = 0;
 }
 
-/** Swap the given buckets. */
+/** Swap the given buckets' contents. */
 static void 
 swap_bucket(map_bucket* restrict bucket1, map_bucket* restrict bucket2) {
 	map_bucket temp = *bucket1;
@@ -103,7 +103,7 @@ swap_bucket(map_bucket* restrict bucket1, map_bucket* restrict bucket2) {
 	*bucket2 = temp;
 }
 
-/** Swap the given pairs. */
+/** Swap the given pairs' contents. */
 static void 
 swap_pair(map_pair* restrict pair1, map_pair* restrict pair2) {
 	map_pair temp = *pair1;
@@ -125,17 +125,6 @@ destroy_bucket_in_map(mat_map* map, size_t index) {
 	map->capacity = 0;
 	map->buckets = temp;
 	map->active--;
-}
-
-/** Pushes an already created pair into the end of the bucket.
-*/
-static int 
-push_pair(map_bucket* bucket, map_pair* pair) {
-	&bucket->pairs = realloc(bucket->pairs, (++bucket->count * sizeof map_pair));
-	if (!(*bucket->pairs)) {
-		return MEMORY_REFUSED;
-	}
-	bucket->pairs[bucket->count - 1] = *pair; // Create a pair at the end of the bucket
 }
 
 /** Swap the given pair with the last pair in the list, and delete it.
@@ -166,10 +155,11 @@ delete_pair_in_bucket(map_bucket* bucket, size_t index) {
 	return SUCCESS;
 }
 
-// Rehashes the map.
-// Does not create a new map; uses the original map.
-// Does not increase capacity. Map capacity must be increased before calling 
-// this, or else its effectively a no-op.
+/** Rehashes the map.
+ * Does not create a new map; uses the original map.
+ * Does not increase capacity. Map capacity must be increased before calling 
+ * this, or else its effectively a no-op.
+ */
 static void 
 map_rehash(mat_map* map) {
 	for (uint32_t i = 0; i < map->capacity; i++) {
@@ -203,23 +193,32 @@ map_rehash(mat_map* map) {
 // -----------------------------------------------------------------------------
 
 typedef struct {
-	// Heap allocated
+	/** Heap allocated; string name of this material. */
 	const char* key;
-	// Heap allocated
-	mtl_t* value;		
+	/** The material value. */
+	mtl_t value;		
 } map_pair;
 
 typedef struct {
-	// Heap allocated, stack containing
+	/** Heap allocated; dynamic array of pairs. */
 	map_pair* pairs;
+	/** Number of contiguous "map pairs" in this bucket. */
 	uint32_t count;
 } map_bucket;
 
 typedef struct {
-	// Heap allocated
+	/** Heap allocated; contiguous list of buckets addressable by hash code, mod
+	the current capacity of the map. */
 	map_bucket* buckets;
+	/** Maximum capacity of the map at a point. Once the number of active 
+	buckets reaches the load factor, this capacity is doubled from its previous
+	value. Default is 16. */
 	uint32_t capacity;
+	/** The number of heap allocated buckets which may or may not contain any
+	pairs. */
 	uint32_t active;
+	/** The number of buckets that, once reached, increases the capacity by 
+	double its previous value. Default is 12. */
 	uint32_t load_factor;
 } mat_map;
 
@@ -371,6 +370,7 @@ map_empty(mat_map* map) {
 
 size_t 
 map_size(mat_map* map) {
+	// Get the number of pairs.
 	size_t count = 0;
 	for (uint32_t i = 0; i < map->capacity; i++) {
 		map_bucket* bucket = map->buckets[i];

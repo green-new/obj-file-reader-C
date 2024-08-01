@@ -19,14 +19,7 @@
 #include "defs.h"
 #include "utils.h"
 
-// Definitions and includes for map.h
-#ifndef MAP_NAME 
-#define MAP_NAME mat_map
-#endif
-#ifndef VALUE_TYPE
-#define VALUE_TYPE mtl_t
-#endif
-#include "map.h"
+#include "material_map.h"
 
 /** @struct mtl_t
  * @brief Material data format as defined from
@@ -34,7 +27,7 @@
  */
 typedef struct {
 	/** Name of this material type. */
-    char* name;
+    char* name; // TODO: Should be 'const'.
 	/** Specifies the ambient reflectivity using rgb values 
 	* scaled from [0, 1]. */
     float ambient[3];
