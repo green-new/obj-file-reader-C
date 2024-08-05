@@ -3,7 +3,7 @@
 
 vec_t
 cross(const vec_t* a, const vec_t* b) {
-	return vec_t {
+	return (vec_t) {
 		.x = (a->y * a->z) - (a->z * b->y),
 		.y = (a->z * b->x) - (a->x * b->z), 
 		.z = (a->x * b->y) - (a->y * b->x)
@@ -17,7 +17,7 @@ dot(const vec_t* a, const vec_t* b) {
 
 vec_t
 add(const vec_t* a, const vec_t* b) {
-	return vec_t {
+	return (vec_t) {
 		.x = a->x + b->x,
 		.y = a->y + b->y,
 		.z = a->z + b->z
@@ -26,10 +26,19 @@ add(const vec_t* a, const vec_t* b) {
 
 vec_t
 sub(const vec_t* a, const vec_t* b) {
-	return vec_t {
+	return (vec_t) {
 		.x = a->x - b->x,
 		.y = a->y - b->y,
 		.z = a->z - b->z
+	};
+}
+
+void
+div(const vec_t* a, float q) {
+	return (vec_t) {
+		.x = a->x / q,
+		.y = a->y / q,
+		.z = a->z / q
 	};
 }
 
