@@ -14,17 +14,33 @@
 #ifndef MATMAP_H_INCLUDED
 #define MATMAP_H_INCLUDED
 
+// TODO: 'const' qualified map pointers for functions that make no 
+// modifications.
+// TODO: Remove any attempts of "moving" buckets after one gets deleted.
+// Solution should be to never remove buckets after they are created until the
+// map is deleted.
+
 /** @struct map_pair
  * @brief A structure containing a [key, value] pair for use in a map.
  * Contains a "const char*" key, and a specified VALUE_TYPE pointer based on 
  * the implementer's definition.
 */
 typedef struct 
-map_pair;
+map_pair map_pair;
+/** @struct map_bucket
+ * @brief A structure containing a contiguous and dynamic list of "map_pair"'s.
+*/
 typedef struct 
-map_bucket;
+map_bucket map_bucket;
+/** @struct mat_map;
+ * @brief A map of [name, mtl_t] pairs. 
+ * Contains a heap allocated list of material name, and material object pairs. 
+ * The "name" is the same as the material's "name. The pairs are stored in 
+ * buckets which are addressable by the name's hash code. The map uses the djb2 
+ * hash algorithm.
+ */
 typedef struct 
-mat_map;
+mat_map mat_map;
 
 /** Creates an empty map with a specific initial capacity.
  * @param map Pointer to the map to initialize. Cannot be NULL.
@@ -33,7 +49,7 @@ mat_map;
  * @return [SUCCESS, MEMORY_REFUSED]
  */
 int 
-map_create(mat_map* map, uint32_t capacity, float load_factor);
+map_create(mat_map* map, uint32_t capacity, uint32_t load_factor);
 
 /** Creates an empty map with an initial capacity of 16 and load_factor of 0.75.
  * @param map Pointer to the map to initialize.
@@ -105,4 +121,4 @@ map_size(mat_map* map);
 void 
 map_clear(mat_map* map);
 
-#undef MAP_H_INCLUDED
+#endif
