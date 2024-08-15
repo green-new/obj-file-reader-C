@@ -27,7 +27,7 @@
  */
 typedef struct {
 	/** Name of this material type. */
-    char* name; // TODO: Should be 'const'.
+    const char* name;
 	/** Specifies the ambient reflectivity using rgb values 
 	* scaled from [0, 1]. */
     float ambient[3];
@@ -61,8 +61,8 @@ typedef struct {
 
 /** A library of material types. Non-opaque. */
 typedef struct {
-	/** Value of this material library. */
-    char* name;
+	/** Name of this material library. */
+    const char* name;
 	/** Map of [material name, material] key/value pairs. */
     mat_map map;
 } mtllib_t;
