@@ -44,8 +44,10 @@ mat_map mat_map;
 
 /** Creates an empty map with a specific initial capacity.
  * @param map Pointer to the map to initialize. Cannot be NULL.
- * @param capacity The initial capacity of this map. Must be an unsigned integer greater than or equal to 0.
- * @param load_factor The load factor. When load_factor*map_capacity buckets have more than 1 pair, the map is automatically rehashed.
+ * @param capacity The initial capacity of this map. Must be an unsigned integer
+ * greater than or equal to 0.
+ * @param load_factor The load factor. When the number of active buckets exceeds 
+ * this value, the map is automatically rehashed after subsequent insertions.
  * @return [SUCCESS, MEMORY_REFUSED]
  */
 int 
@@ -64,9 +66,10 @@ map_create(mat_map* map);
 void 
 map_destroy(mat_map* map);
 
-/** Copies the contents of map2 into map1. Each pointer cannot point to the same object or it is undefined behavior.
- * @param map1 The map to be modified. Cannot be null. Cannot be == to map2.
- * @param map2 The map to be copied. Cannot be null. Cannot be == to map1.
+/** Copies the contents of map2 into map1. 
+ * Each pointer cannot point to the same object or it is undefined behavior.
+ * @param map1 The map to be modified. restricted.
+ * @param map2 The map to be copied. restricted.
  * @return [SUCCESS, MEMORY_REFUSED]
  */
 int 
@@ -74,7 +77,8 @@ map_copy(mat_map* map1, const mat_map* map2);
 
 /**
  * Inserts a [key, value] pair into the map. 
- * If the number of buckets exceeds the load_factor of the current capacity, the hash table is automatically rehashed and inserts the new pair.
+ * If the number of buckets exceeds the load_factor,
+ * the hash table is automatically rehashed and inserts the new pair.
  * Creates a copy of 'value' into the map. If the map is 
  * @param map The map.
  * @param key The key.
