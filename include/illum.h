@@ -32,6 +32,14 @@ enum illum_t {
 // Stores the mathematical equations that "represent various material lighting 
 // and shading effects".
 
+/** @brief Calls the necessary "illumination model".
+* Calls the necessary "illumination model" from the provided "model" flag. 
+* @param mat The material.
+* @param color The output color.
+*/
+void
+illum(mtl_t* mat, color_t* color);
+
 void
 illum_0(mtl_t* mat, float* rgb);
 

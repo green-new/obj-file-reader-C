@@ -28,34 +28,34 @@
 typedef struct {
 	/** Name of this material type. */
     const char* name;
-	/** Specifies the ambient reflectivity using rgb values 
+	/** Specifies the ambient reflectivity (Ka) using rgb values 
 	* scaled from [0, 1]. */
     float ambient[3];
-	/** Specifies the diffuse reflectivity using rgb values scaled from 
+	/** Specifies the diffuse reflectivity (Kd) using rgb values scaled from 
 	* [0, 1]. */
     float diffuse[3];
-	/** Specifies the specular reflectivity using rgb values scaled from 
+	/** Specifies the specular reflectivity (Ks) using rgb values scaled from 
 	* [0, 1]. */
     float specular[3];
-	/** Specifies the transmission filter of this material using rgb values 
+	/** Specifies the transmission filter (Tf) of this material using rgb values 
 	* scaled from [0, 1]. */
     float tm_filter[3];
-	/** Specifies the illumination model to use. Value between 0-10, see 
+	/** Specifies the illumination model (illum) to use. Value between 0-10, see 
 	* complete descriptions in illum.h. */
     uint32_t illum;
-	/** Specifies the "dissolve", or more well known as transparency, of this 
-	* material. */
+	/** Specifies the "dissolve" (d), or more well known as transparency, of 
+	* this material. */
     float transparency;
 	/** The "halo" flag behind the "d" command. Specifies that the material's 
 	* transparency should be dependent on a surface's orientation with regards 
 	* to the world camera. */
 	int halo;
-	/** Specifies the specular exponent for this material. */
+	/** Specifies the specular exponent (Ns) for this material. */
     uint32_t specular_exponent;
-	/** Specifies the sharpness of reflections of this material. */
+	/** Specifies the sharpness of reflections (sharprness) of this material. */
     uint32_t sharpness;
-	/** Specifies the optical density for this material. Also known as "index 
-	* of refraction". */
+	/** Specifies the optical density (Ni) for this material. Also known as 
+	* "index of refraction". */
     float optical_density;
 } mtl_t;
 
@@ -70,19 +70,22 @@ typedef struct {
 /** @brief Creates a new, empty material object.
  * @returns The material.
  */
-mtl_t mtl_create(void);
+mtl_t 
+mtl_create(void);
 
 /** @brief Destroy the material.
  * Destroys any heap allocated data in this material object, and sets all 
  * values to 0.
  * @param material The material object.
  */
-void mtl_destroy(mtl_t* material);
+void 
+mtl_destroy(mtl_t* material);
 
 /** @brief Prints the material's properties to standard output.
  * @param mat The material to print.
  */
-void mtl_print(mtl_t* mat);
+void 
+mtl_print(mtl_t* mat);
 
 /** @brief Prints the material's properties to file. 
  * Prints the material's properties to the provided file. Assumes the file is
@@ -91,22 +94,26 @@ void mtl_print(mtl_t* mat);
  * @param mat The material to print.
  * @return void
  */
-void mtl_fprint(FILE* file, mtl_t* mat);
+void 
+mtl_fprint(FILE* file, mtl_t* mat);
 
 /** @brief Creates a new, empty material library. 
  * @return A material library.
  */
-mtllib_t mtllib_create(void);
+mtllib_t 
+mtllib_create(void);
 
 /** @brief Destroys this material library.
  * @param lib The material library.
  */
-void mtllib_destroy(mtllib_t* lib);
+void 
+mtllib_destroy(mtllib_t* lib);
 
 /** @brief Prints the material library to standard output.
  * @param lib The material library.
  */
-void mtllib_print(mtllib_t* lib);
+void 
+mtllib_print(mtllib_t* lib);
 
 /** @brief Print the material library to file. 
  * Prints the material library to the provided file. Assumes the file is
@@ -114,7 +121,8 @@ void mtllib_print(mtllib_t* lib);
  * @param file The file pointer.
  * @param lib The material library.
  */
-void mtllib_fprint(FILE* file, mtllib_t* lib);
+void 
+mtllib_fprint(FILE* file, mtllib_t* lib);
 
 /** @brief Read a material library from file. 
  * Reads the material from the provided filename into the provided material
@@ -124,6 +132,7 @@ void mtllib_fprint(FILE* file, mtllib_t* lib);
  * @return Can return either: [MTL_SUCCESS, MTL_COULDNT_OPEN_FILE, 
  * MTL_OUT_OF_MEMORY].
  */
-int mtllib_read(const char* fn, mtllib_t* lib);
+int 
+mtllib_read(const char* fn, mtllib_t* lib);
 
 #endif

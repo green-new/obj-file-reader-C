@@ -390,6 +390,7 @@ map_destroy(mat_map* map) {
 			destroy_pair(pair);
 		}
 		destroy_bucket(bucket);
+		free(bucket->pairs);
 	}
 	free(map->buckets);
 	free(map);
@@ -499,7 +500,7 @@ map_at(mat_map* map, const char* key, mtl_t* out) {
 
 int 
 map_empty(mat_map* map) {
-	return map->capacity == 0;
+	return map->active == 0;
 }
 
 size_t 
@@ -522,10 +523,13 @@ map_clear(mat_map* map) {
 			destroy_pair(pair);
 			// 2. Remove from bucket.
 			rm_pair_from_bucket(bucket, i);
+			// Don't free the pairs array.
 		}
 		bucket->active = 0;
 		destroy_bucket(bucket);
 	}
+	// Don't free the buckets array.
+	map->active = 0;
 	map->capacity = 0;
 	return SUCCESS;
 }
