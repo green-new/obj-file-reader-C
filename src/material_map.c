@@ -103,7 +103,7 @@ destroy_pair(map_pair* pair) {
 
 /** Destroys a given bucket's contents. Assumes "bucket" is non-null.
 * Destroys the "pairs" within the bucket and sets their properties to NULL, 
-* and sets the "count" to "0".
+* and sets the "active" to "0".
 * @param bucket The bucket to destroy. Assumes it is valid.
 */
 static void 
@@ -155,7 +155,8 @@ destroy_bucket_in_map(mat_map* map, size_t index) {
 /** Swap the given pair with the last pair in the list, and delete it.
 * Assumes "index" is within bounds.
 * Assumes there is a non-zero number of active pairs.
-* Simply zeros out the struct. Call "destroy_pair" to free memory.
+* Call "destroy_pair" to free memory before calling this function or memory
+* will be leaked.
 * @param bucket The bucket from which the pair exists.
 * @param index The index of the pair in the pairs array.
 */
@@ -191,7 +192,12 @@ add_pair_to_bucket(map_bucket* bucket, map_pair* pair) {
  * @param to The bucket the pair is moving to.
  * @param pair The pair.
  */
-static void mv_pair_from_buckets(map_bucket* from, map_bucket* to, map_pair* pair, uint32_t pairIndexInFrom) {
+static void 
+mv_pair_from_buckets(
+map_bucket* from,
+map_bucket* to, 
+map_pair* pair, 
+uint32_t pairIndexInFrom) {
 	rm_pair_from_bucket(from, pairIndexInFrom);
 	add_pair_to_bucket(to, pair);
 }
@@ -203,7 +209,8 @@ static void mv_pair_from_buckets(map_bucket* from, map_bucket* to, map_pair* pai
  */
 int
 map_dbl_capacity(mat_map* map) {
-	map_bucket* temp = realloc(map->buckets, (map->capacity << 1) * sizeof map_bucket);
+	map_bucket* temp = realloc(map->buckets, (map->capacity << 1) 
+		* sizeof map_bucket);
 	if (!temp) {
 		return MEMORY_REFUSED;
 	}
@@ -220,7 +227,8 @@ map_dbl_capacity(mat_map* map) {
  */
 int 
 bucket_dbl_capacity(map_bucket* bucket) {
-	map_pair* temp = realloc(bucket->pairs, (bucket->capacity << 1) * sizeof map_pair);
+	map_pair* temp = realloc(bucket->pairs, (bucket->capacity << 1) 
+		* sizeof map_pair);
 	if (!temp) {
 		return MEMORY_REFUSED;
 	}
@@ -425,6 +433,7 @@ map_insert(mat_map* map, const char* key, mtl_t value) {
 		map_bucket* bucket = &map->buckets[i];
 		if (!init_bucket(bucket)) {
 			free(map->buckets);
+			free(pair.key);
 			return MEMORY_REFUSED;
 		}
 		// Init pairs
@@ -441,7 +450,11 @@ map_insert(mat_map* map, const char* key, mtl_t value) {
 			map->active++;
 		}
 		if (bucket->active + 1 > bucket->capacity) {
-			bucket_dbl_capacity(bucket);
+			if (!bucket_dbl_capacity(bucket)) {
+				free(map->buckets);
+				free(pair.key);
+				return MEMORY_REFUSED;
+			}
 		}
 		bucket->active++;
 		bucket->pairs[bucket->active - 1] = pair;
@@ -450,14 +463,38 @@ map_insert(mat_map* map, const char* key, mtl_t value) {
 	return SUCCESS;
 }
 
-int 
+void  
 map_erase(mat_map* map, const char* key) {
-	
+	map_bucket* bucket = get_bucket(map, key);
+	if (!bucket) {
+		return;
+	}
+	for (uint32_t i = 0; i < bucket->active; i++) {
+		map_pair* pair = &bucket->pairs[i];
+		if (strequ(key, pair->key)) {
+			// 1. Free memory
+			destroy_pair(pair);
+			// 2. Remove from bucket.
+			rm_pair_from_bucket(bucket, i);
+		}
+	}
 }
 
-int 
+void 
 map_at(mat_map* map, const char* key, mtl_t* out) {
-	
+	map_bucket* bucket = get_bucket(map, key);
+	if (!bucket) {
+		out = NULL;
+		return;
+	}
+	for (uint32_t i = 0; i < bucket->active; i++) {
+		map_pair* pair = &bucket->pairs[i];
+		if (strequ(key, pair->key)) {
+			out = pair;
+			return;
+		}
+	}
+	out = NULL;
 }
 
 int 
@@ -467,37 +504,27 @@ map_empty(mat_map* map) {
 
 size_t 
 map_size(mat_map* map) {
-	// Get the number of pairs.
 	size_t count = 0;
 	for (uint32_t i = 0; i < map->capacity; i++) {
 		map_bucket* bucket = map->buckets[i];
-		if (!bucket) {
-			continue;
-		}
-		count += bucket->capacity;
+		count += bucket->active;
 	}
 	return count;
 }
 
 int 
 map_clear(mat_map* map) {
-	for (uint32_t i = 0; i < map2->count; i++) {
-		map_bucket* bucket = map2->buckets[i];
-		if (!bucket) {
-			continue;
-		}
-		for (uint32_t j = 0; j < bucket->capacity; j++) {
+	for (uint32_t i = 0; i < map->capacity; i++) {
+		map_bucket* bucket = map->buckets[i];
+		for (uint32_t j = 0; j < bucket->active; j++) {
 			map_pair* pair = bucket->pairs[j];
-			if (!pair) {
-				continue;
-			}
-			int code = map_insert(map1, pair->key, pair->value);
-			if (!code) {
-				return code; // [MEMORY_REFUSED]
-			}
+			// 1. Free memory
+			destroy_pair(pair);
+			// 2. Remove from bucket.
+			rm_pair_from_bucket(bucket, i);
 		}
-		bucket->capacity = 0;
-		free(bucket);
+		bucket->active = 0;
+		destroy_bucket(bucket);
 	}
 	map->capacity = 0;
 	return SUCCESS;

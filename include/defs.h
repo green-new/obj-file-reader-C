@@ -46,6 +46,8 @@
 
 /** @brief Integer return codes for this library.
  * Return codes for this library as integers. A successful exit is always 0.
+ * @todo Need to rename these error codes with a OBJC_ prefix. or something.
+ * @todo Decide on a prefix name.
  */
 enum return_codes {
     SUCCESS = 0,

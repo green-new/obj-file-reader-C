@@ -91,18 +91,17 @@ map_insert(mat_map* map, const char* key, const mtl_t* value);
 /** Erases & frees the value at the given key in the map.
  * @param map The map.
  * @param key The key of the pair to remove.
- * @return [SUCCESS, NO_OP]
  */
-int 
+void  
 map_erase(mat_map* map, const char* key);
 
 /** Retrives the object at the specified key in the map.
  * @param map The map.
  * @param key The key.
- * @param out The out parameter that is updated to the value if found.
- * @return [FOUND, NOT_FOUND]
+ * @param out The out parameter that is updated to the value if found. NULL if
+ * no material was found.
  */
-int 
+void 
 map_at(mat_map* map, const char* key, mtl_t* out);
 
 /** Determines if this map is empty or not.
