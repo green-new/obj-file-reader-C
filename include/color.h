@@ -36,14 +36,14 @@ typedef union {
 		/** Alpha/unused value. */
 		uint8_t a;
 	} rgba;
-} int_color_t;
+} colori_t;
 
 typedef struct {
 	float r;
 	float g;
 	float b;
 	float a;
-} float_color_t;
+} colorf_t;
 
 int_color_t
 from_floats(float r, float g, float b, float a);
