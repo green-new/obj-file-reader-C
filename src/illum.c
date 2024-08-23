@@ -39,6 +39,7 @@ illum_0(mtl_t* mat, float* rgb) {
 }
 
 void
-illum_1(mtl_t* mat, float* rgb, light_t* lights, uint32_t n_lights) {
-	
+illum_1(mtl_t* mat, color_t* color, light_t* lights, uint32_t n_lights) {
+	// color = KaIa + Kd { SUM j=1..ls, (N * Lj)Ij }
+	const color_t ambience = 
 }

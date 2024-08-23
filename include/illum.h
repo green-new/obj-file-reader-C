@@ -40,10 +40,23 @@ enum illum_t {
 void
 illum(mtl_t* mat, color_t* color);
 
+/**
+ 0  This is a constant color illumination model.  The color is the 
+specified Kd for the material.  The formula is:
+ 
+   color = Kd
+*/
 void
-illum_0(mtl_t* mat, float* rgb);
+illum_0(mtl_t* mat, color_t* color);
 
+/**
+ 1  This is a diffuse illumination model using Lambertian shading. The 
+color includes an ambient constant term and a diffuse shading term for 
+each light source.  The formula is
+ 
+   color = KaIa + Kd { SUM j=1..ls, (N * Lj)Ij }
+ */
 void
-illum_1(mtl_t* mat, float* rgb);
+illum_1(mtl_t* mat, color_t* color);
 
 #endif

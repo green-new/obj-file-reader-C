@@ -20,7 +20,7 @@ typedef union {
 	/** Array of 4 bytes giving the R, G, B, A values in order. R may or may not
 	be the 0th index or the 3rd index and is system dependent. */
 	uint8_t arr[4];
-	/** @struct comp
+	/** @struct rgba
 	* @brief Contains the R, G, B, A values individually, sharing the same
 	* memory as "hex".
 	* Unfortunately, depending on the system or byte order, the components may 
@@ -44,6 +44,9 @@ typedef struct {
 	float b;
 	float a;
 } float_color_t;
+
+color_t
+mul(const color_t* c1, const color_t* c2);
 
 int_color_t
 from_floats(float r, float g, float b, float a);

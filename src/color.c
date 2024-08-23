@@ -31,3 +31,10 @@ from_int(uint32_t hex) {
 		.a = ((float)(hex & 0xff000000) / 255.0f),
 	};
 }
+
+color_t
+mul(const color_t* c1, const color_t* c2) {
+	color_t res;
+	
+	return res;
+}
