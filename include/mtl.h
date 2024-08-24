@@ -45,11 +45,14 @@ typedef struct {
     uint32_t illum;
 	/** Specifies the "dissolve" (d), or more well known as transparency, of 
 	* this material. */
-    float transparency;
-	/** The "halo" flag behind the "d" command. Specifies that the material's 
-	* transparency should be dependent on a surface's orientation with regards 
-	* to the world camera. */
-	int halo;
+	struct {
+		/** The dissolve or transparency value. */
+		float value;	
+		/** The "halo" flag behind the "d" command. Specifies that the material's 
+		* transparency should be dependent on a surface's orientation with regards 
+		* to the world camera. */
+		int halo;
+	} dissolve;				
 	/** Specifies the specular exponent (Ns) for this material. */
     uint32_t specular_exponent;
 	/** Specifies the sharpness of reflections (sharprness) of this material. */
@@ -57,10 +60,67 @@ typedef struct {
 	/** Specifies the optical density (Ni) for this material. Also known as 
 	* "index of refraction". */
     float optical_density;
-	// @todo Work on texture maps.
+	/** Specifies that a color texture filter or color procedural texture file
+	is linked to the diffuse reflectivity of the material.	*/
 	struct {
+		/** Name of the color texture filter or color procedural texture 
+		file. */
 		const char* filename;
-	} map_ka;
+		/** Turns texture blending in the horizontal direction on or off. 
+		Default is 1 (on). */
+		int blendu;
+		/** Turns texture blending in the vertical direction on or off. Default
+		is 1 (on). */
+		int blendv;
+		/** Enables color correction. Default is 0 (off). */
+		int cc;
+		/** Turns texture clamping on or off. If clamping is on, texture 
+		coordinates are restricted to [0, 1] in the u/v/w range. Default is 
+		off. */
+		int clamp;
+		/** Specifies the range over which scalar or color textures may vary. */
+		struct {
+			/** Specifies a base value to texture colors. Positive values 
+			increase brightness, negative values decrease brightness. Default is
+			0. */
+			float base;
+			/** Specifies a range of the texture values. Increasing the number
+			increases contrast. Default is 1. */
+			float gain;
+		} mm;
+		/** Offsets the position of the texture map. Default is {0, 0, 0}. Order
+		is [u, v, w]. */
+		float o[3];
+		/** Scales the size of the texture pattern. Default is {1, 1, 1}. Order
+		is [u, v, w]. */
+		float s[3];
+		/** Specifies and enables turbulence for textures. Intended to add 
+		variance to original textures and allows simple images to be repeated
+		over large areas. */
+		float t[3];
+		/** Specifies the resolution of the texture created when an image is 
+		used. The default texture size is the largest power of 2 that does not 
+		exceed the original image size. */
+		struct { 
+			/** The width of the image. */
+			uint32_t w;
+			/** The height of the image. */
+			uint32_t h;
+		} texres;
+	} map_Ka;
+	struct {
+		
+	} map_Ks;
+	struct {
+		
+	} map_Kd;
+	struct {
+		
+	} map_Ni;
+	/** Specifies a */
+	struct {
+		
+	} map_refl;
 } mtl_t;
 
 /** A library of material types. Non-opaque. */
