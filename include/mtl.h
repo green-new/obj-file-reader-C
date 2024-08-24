@@ -57,6 +57,10 @@ typedef struct {
 	/** Specifies the optical density (Ni) for this material. Also known as 
 	* "index of refraction". */
     float optical_density;
+	// @todo Work on texture maps.
+	struct {
+		const char* filename;
+	} map_ka;
 } mtl_t;
 
 /** A library of material types. Non-opaque. */

@@ -7,7 +7,7 @@
 //	- Input is []
 // 	- Output is ['FragColor']
 // 	- Uniforms/Requirements:
-//		- vec3 diffuse -> The material's diffuse color.
+//		- vec3 u_diffuse -> The material's diffuse color.
 //	- Formula for this model is as follows:
 //		- ```color = Kd```
 //		- where, Kd is the material's diffuse reflectance.
@@ -15,8 +15,8 @@
 
 out vec4 FragColor;
 
-uniform vec3 diffuse;
+uniform vec3 u_diffuse;
 
 void main() {
-    FragColor = vec4(diffuse, 1.0);
+    FragColor = vec4(u_diffuse, 1.0);
 }

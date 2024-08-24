@@ -1,12 +1,13 @@
 // Author: green
 // Date: 8/24/24
-// Description: .mtl format specification - Illumination model 2 "illum 2"
+// Description: .mtl format specification - Illumination model 3 "illum 3"
 // Specifications:
 //	- Intended to be used for deferred rendering - can be used elsewhere however
 // 	- 'MAX_LIGHTS' is 32 - increase if needed
 // 	- 'mtl_t', 'light_t' only contain as much data as needed to compute the 
 //		illumination model
-//	- Input is ['i_FragPos', 'i_Normal', 'i_ViewPos']
+//	- Input is ['i_FragPos', 'i_Normal', 'i_ViewPos', 'i_reflMapIntensity', 
+//		'i_rayTrace']
 // 	- Output is ['FragColor']
 // 	- Uniforms/Requirements:
 //		- u_material 	-> The material.
@@ -14,9 +15,10 @@
 //		- u_lights		-> The lights array.
 //		- u_ambient 	-> The global light ambience.
 //	- Formula for this model is as follows:
-//		- ```color = KaIa 
-// 				+ Kd { SUM j=1..ls, (N*Lj)Ij }
-//				+ Ks { SUM j=1..ls, ((H*Hj)^Ns)Ij }```
+//		- ```color = KaIa
+// 			+ Kd { SUM j=1..ls, (N*Lj)Ij }
+// 			+ Ks ({ SUM j=1..ls, ((H*Hj)^Ns)Ij } + Ir)
+//   		Ir = (intensity of reflection map) + (ray trace)```
 //		- where, Ka is the material's ambient reflectance (vec3);
 //		- Ia is the is the global ambient light (vec3);
 //		- Kd is the material's diffuse reflectance (vec3);
@@ -41,6 +43,8 @@ out vec4 FragColor;
 in vec3 i_ViewPos;
 in vec3 i_FragPos;
 in vec3 i_Normal;
+in float i_reflMapIntensity;
+in float i_rayTrace;
 
 // struct mtl_t
 // Contains: ambient color, diffuse color, specular color, and specular 
@@ -108,6 +112,7 @@ void main() {
 			normalize(view_dir),
 			u_lights[i].intensity);
 	}
+	specular_sum += i_reflMapIntensity + i_rayTrace;
 	// Ks * { SUM }
 	vec3 specular = material.specular * specular_sum;
 	FragColor = vec4(ambient + diffuse + specular, 1.0);
