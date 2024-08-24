@@ -113,11 +113,24 @@ typedef struct {
 	} map_Ks;
 	struct {
 		
-	} map_Kd;
+	} map_Ns;
 	struct {
 		
-	} map_Ni;
-	/** Specifies a */
+	} map_d;
+	struct {
+		
+	} map_aat;
+	struct {
+		
+	} decal;
+	struct {
+		
+	} disp;
+	/** Specifies a bump map. */
+	struct {
+		
+	} bump;
+	/** Specifies a reflection map. */
 	struct {
 		
 	} map_refl;
