@@ -57,7 +57,7 @@ uniform vec3 	u_ambient;
 // Lambertian diffuse shading. Li is light intensity
 vec3 diffuse(in vec3 N, in vec3 L, in float Li) {
 	float diffuse = clamp(dot(N, L), 0, 1);
-	return u_material.diffuse * Li * u_material.diffuse;
+	return u_material.diffuse * Li * diffuse;
 }
 
 void main() {

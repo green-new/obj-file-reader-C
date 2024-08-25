@@ -2,9 +2,9 @@
  * @file map.h
  * @author green
  * @date 7/30/2024
- * @brief Definitions of opqaue "map" types, map type macros, and map functions.
+ * @brief Definitions of the material map type and map functions.
  * Header file containing the details required to create, destroy, and modify a 
- * type-erased map structure in C.
+ * type-erased .MTL map structure in C.
  */
 #include <string.h>
 #include "defs.h"
@@ -16,9 +16,6 @@
 
 // TODO: 'const' qualified map pointers for functions that make no 
 // modifications.
-// TODO: Remove any attempts of "moving" buckets after one gets deleted.
-// Solution should be to never remove buckets after they are created until the
-// map is deleted.
 
 /** @struct map_pair
  * @brief A structure containing a [key, value] pair for use in a map.

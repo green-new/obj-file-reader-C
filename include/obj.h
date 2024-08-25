@@ -79,8 +79,8 @@ typedef struct mesh {
     /* C-string name of the object. */
     char* name;
 
-    /* Array of material libraries (which contain a list of materials). */
-    mtlarr_t mtl_list[MTLARRAY_MAX];
+    /* Map of material libraries. */
+	mtllib_t mtllib;
 
     /* The face flag. Determines what attributes are used in every face definition. */
     union u_flags {

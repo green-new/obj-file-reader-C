@@ -7,7 +7,7 @@ MODELD:=models
 BIND:=bin
 OBJD:=obj
 SRCD:=src
-SRC:=utils.c obj.c mtl.c color.c illum.c map.c vec.c
+SRC:=utils.c obj.c mtl.c color.c illum.c material_map.c vec.c light.c
 SRC:=$(addprefix ${SRCD}/,${SRC})
 OBJ:=$(subst .c,.o,$(subst ${SRCD},${OBJD},${SRC}))
 

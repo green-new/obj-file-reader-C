@@ -349,7 +349,7 @@ typedef struct {
 } mat_map;
 
 int 
-map_create(MAP_TYPE* map, uint32_t capacity, uint32_t load_factor) {
+map_create(mat_map* map, uint32_t capacity, uint32_t load_factor) {
 	map = calloc(1, sizeof mat_map);
 	if (!map) {
 		return MEMORY_REFUSED;
