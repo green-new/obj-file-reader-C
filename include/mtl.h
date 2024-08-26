@@ -193,7 +193,11 @@ typedef struct {
 	turb_t		turbulence;
 	texres_t	texres;
 } bump_t;
-
+typedef struct {
+	filename_t filename;
+	refl_type_t type;
+	refl_list_t* next;
+} refl_list_t;
 /** @struct refl_t
  * @brief Reflection map options.
  */
