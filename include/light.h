@@ -21,5 +21,7 @@ typedef struct {
 	float intensity;
 } light_t;
 
+void reflect(light_t* light);
+
 #ifndef ILLUM_H_INCLUDED
 #define ILLUM_H_INCLUDED

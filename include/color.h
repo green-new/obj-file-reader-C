@@ -1,7 +1,7 @@
 /**
  * @file color.h
  * @author green
- * @date 7/30/2024
+ * @date 8/25/2024
  * @brief Specifies the color type and related functions.
  * Header file specifying a unionized, integer RGBA color type, and the related 
  * functions converting it to doubles or integers.
@@ -10,30 +10,35 @@
 #ifndef COLOR_H_INCLUDED
 #define COLOR_H_INCLUDED
 
-/** @union color_t
- * @brief A 4-byte union containing a hexadecimal color and its components.
- * A 4-byte color type. The current system must support a 8-bit char type.
+/**
+ * @brief A union color type.
+ * A 4-byte integer color type. The current system must support a 8-bit char 
+ * type.
  */
 typedef union {
-	/** Hexadecimal color value. */
+	/** 
+	 * Hexadecimal color value. 
+	 */
 	uint32_t hex;
-	/** Array of 4 bytes giving the R, G, B, A values in order. R may or may not
-	be the 0th index or the 3rd index and is system dependent. */
-	uint8_t arr[4];
-	/** @struct rgba
-	* @brief Contains the R, G, B, A values individually, sharing the same
-	* memory as "hex".
-	* Unfortunately, depending on the system or byte order, the components may 
-	* or may not be representative of their name.
-	*/
+	/**
+	 * @brief Struct containing individual RGBA values.
+	 */
 	struct {
-		/** Red value. */
+		/** 
+		 * Red value. 
+		 */
 		uint8_t r;
-		/** Green value. */
+		/** 
+		 * Green value.
+		 */
 		uint8_t g;
-		/** Blue value. */
+		/** 
+		 * Blue value.
+		 */
 		uint8_t b;
-		/** Alpha/unused value. */
+		/** 
+		 * Alpha/unused value.
+		 */
 		uint8_t a;
 	} rgba;
 } colori_t;

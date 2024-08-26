@@ -29,6 +29,7 @@ fstart(FILE* file);
 
 /** Initalizes a provided buffer with data from the line based on the expected 
  * dimensions and data format.
+ * 
  * @param line The string line from the file.
  * @param buffer The heap-allocated buffer to initialize.
  * @param dim The expected dimension of values to read in.
