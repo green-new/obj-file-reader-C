@@ -174,9 +174,9 @@ typedef struct {
 typedef struct {
 	filename_t	filename;
 	bm_t 		bm;
-	clamp_t		clamp;
 	blendu_t	blendu;
 	blendv_t	blendv;
+	clamp_t		clamp;
 	imfchan_t	imfchan;
 	mm_t		mm;
 	offset_t	offset;

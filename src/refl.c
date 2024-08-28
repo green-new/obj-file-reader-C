@@ -28,7 +28,7 @@ void
 refl_destroy(refl_t* refl) {
     refl->used = 0;
     refl_node_t* p = refl->head;
-    while (!p) {
+    while (p) {
         refl_node_t* temp = p->next;
         free(p);
         p = temp;
@@ -39,7 +39,7 @@ int
 refl_append(refl_t* refl, refl_opts_t options) {
     refl->used++;
     refl_node_t* p = refl->head;
-    while (!p->next) {
+    while (p->next) {
         p = p->next;
     }
     p->next = calloc(1, sizeof(refl_node_t));
