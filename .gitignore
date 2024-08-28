@@ -2,4 +2,4 @@ bin/
 obj/
 docs/
 output.txt
-vscode/
+.vscode/
