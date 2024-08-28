@@ -10,6 +10,7 @@
 #include <stdint.h>
 
 #include "mtl.h"
+#include "mtllib.h"
 #include "utils.h"
 #include "defs.h"
 

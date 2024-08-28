@@ -6,13 +6,14 @@
  * Header file containing the details required to create, destroy, and modify a 
  * type-erased .MTL map structure in C.
  */
+
+#ifndef MATMAP_H_INCLUDED
+#define MATMAP_H_INCLUDED
+
 #include <string.h>
 #include "defs.h"
 #include "utils.h"
 #include "mtl.h"
-
-#ifndef MATMAP_H_INCLUDED
-#define MATMAP_H_INCLUDED
 
 // TODO: 'const' qualified map pointers for functions that make no 
 // modifications.
@@ -22,22 +23,58 @@
  * Contains a "const char*" key, and a specified VALUE_TYPE pointer based on 
  * the implementer's definition.
 */
-typedef struct 
-map_pair map_pair;
+typedef struct {
+	/** Heap allocated; string name of this material. */
+	const char* key;
+	/** The material value. */
+	mtl_t value;
+	/** Boolean value if this pair has been rehashed. Sets to 1 during the 
+	rehashing period, set back to 0 after rehashing has been completed. */
+	int hash;
+} map_pair;
+
 /** @struct map_bucket
  * @brief A structure containing a contiguous and dynamic list of "map_pair"'s.
 */
-typedef struct 
-map_bucket map_bucket;
-/** @struct mat_map;
+typedef struct {
+	/** Heap allocated; dynamic array of pairs. */
+	map_pair* pairs;
+	/** Number of contiguous "map pairs" in this bucket. */
+	uint32_t capacity;
+	/** Number of contiguous "active map pairs" in this bucket. */
+	uint32_t active;
+} map_bucket;
+
+/** @struct keys_list_t
+ * @brief A structure containing a contiguous list of keys as strings.
+*/
+typedef struct {
+	uint32_t used;
+	const char** keys;
+} keys_list_t;
+
+/** @struct mat_map
  * @brief A map of [name, mtl_t] pairs. 
  * Contains a heap allocated list of material name, and material object pairs. 
  * The "name" is the same as the material's "name. The pairs are stored in 
  * buckets which are addressable by the name's hash code. The map uses the djb2 
  * hash algorithm.
  */
-typedef struct 
-mat_map mat_map;
+typedef struct {
+	/** Heap allocated; contiguous list of buckets addressable by hash code, mod
+	the current capacity of the map. */
+	map_bucket* buckets;
+	/** Maximum capacity of the map at a point. Once the number of active 
+	buckets reaches the load factor, this capacity is doubled from its previous
+	value. Default is 16. */
+	uint32_t capacity;
+	/** The number of heap allocated buckets which may or may not contain any
+	pairs. */
+	uint32_t active;
+	/** The number of buckets that, once reached, increases the capacity by 
+	double its previous value. Default is 12. */
+	uint32_t load_factor;
+} mat_map;
 
 /** Creates an empty map with a specific initial capacity.
  * @param map Pointer to the map to initialize. Cannot be NULL.
@@ -116,9 +153,21 @@ size_t
 map_size(mat_map* map);
 
 /** Clears this map of all elements.
- * @param The map.
+ * @param map The map.
  */
 void 
 map_clear(mat_map* map);
+
+/** Return a heap-allocated list of keys.
+ * @param map The map.
+ */
+keys_list_t
+map_keys(mat_map* map);
+
+/** Destroys the list. Does not destroy the keys in the map.
+ * @param map The map.
+ */
+void
+keys_list_destroy(keys_list_t* list);
 
 #endif

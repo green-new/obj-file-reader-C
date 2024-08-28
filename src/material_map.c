@@ -1,7 +1,5 @@
 #include "material_map.h"
 
-#ifdef MAP_IMPL
-
 // -----------------------------------------------------------------------------
 // Static utility
 // -----------------------------------------------------------------------------
@@ -9,7 +7,7 @@
 static const uint32_t default_load_factor = 12;
 static const uint32_t default_capacity = 16;
 static const uint32_t default_initial_pair_count = 4;
-static const uint32_t uint32_max = 4294967295
+static const uint32_t uint32_max = 4294967295;
 
 /** Produces a hash code from the provided string.
  * Uses the djb2 algorithm.
@@ -39,7 +37,7 @@ get_pair(map_bucket* bucket, const char* key) {
 	}
 	for (int i = 0; i < bucket->capacity; i++) {
 		map_pair* pair = &bucket->pairs[i];
-		if (pair && pair->key && pair->value && strequ(key, pair->key)) {
+		if (pair && pair->key && strequ(key, pair->key)) {
 			return pair;
 		}
 	}
@@ -70,7 +68,7 @@ static int
 init_bucket(map_bucket* bucket) {
 	bucket->capacity = default_initial_pair_count;
 	bucket->active = 0;
-	bucket->pairs = calloc(default_initial_pair_count, sizeof map_pair);
+	bucket->pairs = calloc(default_initial_pair_count, sizeof(map_pair));
 	if (!bucket->pairs) {
 		return MEMORY_REFUSED;
 	}
@@ -83,7 +81,7 @@ init_bucket(map_bucket* bucket) {
 static void 
 init_pair(map_pair* pair) {
 	pair->key = NULL;
-	pair->value = 0;
+	pair->value = (mtl_t) {0};
 	pair->hash = 0;
 }
 
@@ -97,7 +95,7 @@ destroy_pair(map_pair* pair) {
 	// cannot be modified.
 	free((void*)pair->key);
 	pair->key = NULL;
-	pair->value = 0;
+	pair->value = (mtl_t) {0};
 	pair->hash = 0;
 }
 
@@ -137,7 +135,6 @@ swap_pair(map_pair* restrict pair1, map_pair* restrict pair2) {
 }
 
 /** Destroy the bucket at the given index and replace it with the last.
- * Replaces the specified bucket in the map with the last bucket in the array.
  * @param map The map.
  * @param index The index of the bucket in the "buckets" array. Assumes this
  * index is valid, or else its undefined.
@@ -147,8 +144,7 @@ static void
 destroy_bucket_in_map(mat_map* map, size_t index) {
 	map_bucket* bucket = &map->buckets[index];
 	destroy_bucket(bucket);	
-	map->capacity = 0;
-	map->buckets = temp;
+	map->capacity--;
 	map->active--;
 }
 
@@ -166,7 +162,7 @@ rm_pair_from_bucket(map_bucket* bucket, uint32_t index) {
 	if (index < bucket->active - 1) {
 		bucket->pairs[index] = bucket->pairs[bucket->active - 1];
 	}
-	bucket->pairs[bucket->active - 1] = {0};
+	bucket->pairs[bucket->active - 1] = (map_pair) {0};
 	bucket->active--;
 }
 
@@ -210,7 +206,7 @@ uint32_t pairIndexInFrom) {
 int
 map_dbl_capacity(mat_map* map) {
 	map_bucket* temp = realloc(map->buckets, (map->capacity << 1) 
-		* sizeof map_bucket);
+		* sizeof(map_bucket));
 	if (!temp) {
 		return MEMORY_REFUSED;
 	}
@@ -228,13 +224,12 @@ map_dbl_capacity(mat_map* map) {
 int 
 bucket_dbl_capacity(map_bucket* bucket) {
 	map_pair* temp = realloc(bucket->pairs, (bucket->capacity << 1) 
-		* sizeof map_pair);
+		* sizeof(map_pair));
 	if (!temp) {
 		return MEMORY_REFUSED;
 	}
 	bucket->pairs = temp;
 	bucket->capacity << 1;
-	bucket->load_factor << 1;
 	return SUCCESS;
 }
 
@@ -272,13 +267,13 @@ map_rehash(mat_map* map) {
 	}
 	// Increase individual bucket capacity if # of actives exceeds capacity
 	for (uint32_t i = 0; i < map->capacity; i++) {
-		map_bucket* bucket = &map->bucket[i];
+		map_bucket* bucket = &map->buckets[i];
 		if (bucket->active > bucket->capacity) {
 			if (!bucket_dbl_capacity(bucket)) {
 				return MEMORY_REFUSED;
 			}
 			// Set newly created pairs to empty values
-			for (uint32_t j = active; j < capacity; j++) {
+			for (uint32_t j = bucket->active; j < bucket->capacity; j++) {
 				init_pair(&bucket->pairs[j]);
 			}				
 		}
@@ -290,10 +285,10 @@ map_rehash(mat_map* map) {
 			map_pair* pair = &bucket->pairs[j];
 			// Assumes a rehash_bucket is never null (should be if allocation
 			// did not fail), and is atleast zero-initialized			
-			uint32_t index = hash(key) % map->capacity;
+			uint32_t index = hash(pair->key) % map->capacity;
 			map_bucket* rehash_bucket = &map->buckets[index];
 			if (bucket != rehash_bucket) {
-				mv_pair_from_buckets(bucket, rehash_bucket, pair);
+				mv_pair_from_buckets(bucket, rehash_bucket, pair, j);
 			}
 		}
 	}
@@ -313,50 +308,15 @@ map_rehash(mat_map* map) {
 // Implementation
 // -----------------------------------------------------------------------------
 
-typedef struct {
-	/** Heap allocated; string name of this material. */
-	const char* key;
-	/** The material value. */
-	mtl_t value;
-	/** Boolean value if this pair has been rehashed. Sets to 1 during the 
-	rehashing period, set back to 0 after rehashing has been completed. */
-	int hash;
-} map_pair;
-
-typedef struct {
-	/** Heap allocated; dynamic array of pairs. */
-	map_pair* pairs;
-	/** Number of contiguous "map pairs" in this bucket. */
-	uint32_t capacity;
-	/** Number of contiguous "active map pairs" in this bucket. */
-	uint32_t active;
-} map_bucket;
-
-typedef struct {
-	/** Heap allocated; contiguous list of buckets addressable by hash code, mod
-	the current capacity of the map. */
-	map_bucket* buckets;
-	/** Maximum capacity of the map at a point. Once the number of active 
-	buckets reaches the load factor, this capacity is doubled from its previous
-	value. Default is 16. */
-	uint32_t capacity;
-	/** The number of heap allocated buckets which may or may not contain any
-	pairs. */
-	uint32_t active;
-	/** The number of buckets that, once reached, increases the capacity by 
-	double its previous value. Default is 12. */
-	uint32_t load_factor;
-} mat_map;
-
 int 
 map_create(mat_map* map, uint32_t capacity, uint32_t load_factor) {
-	map = calloc(1, sizeof mat_map);
+	map = calloc(1, sizeof(mat_map));
 	if (!map) {
 		return MEMORY_REFUSED;
 	}
 	map->load_factor = load_factor;
 	map->capacity = capacity;
-	map->buckets = calloc(capacity, sizeof map_bucket);
+	map->buckets = calloc(capacity, sizeof(map_bucket));
 	if (!map->buckets) {
 		free(map);
 		return MEMORY_REFUSED;
@@ -384,7 +344,7 @@ map_create(mat_map* map) {
 void 
 map_destroy(mat_map* map) {
 	for (uint32_t i = 0; i < map->capacity; i++) {
-		map_bucket* bucket = map->buckets[i];
+		map_bucket* bucket = &map->buckets[i];
 		for (size_t i = 0; i < bucket->active; i++) {
 			map_pair* pair = &bucket->pairs[i];
 			destroy_pair(pair);
@@ -402,7 +362,7 @@ map_copy(mat_map* restrict map1, const mat_map* restrict map2) {
 	for (uint32_t i = 0; i < map2->capacity; i++) {
 		map_bucket* bucket = &map2->buckets[i];
 		for (uint32_t j = 0; j < bucket->active; j++) {
-			map_pair* pair = bucket->pairs[j];
+			map_pair* pair = &bucket->pairs[j];
 			// Insert to the first map. Will copy pair properties
 			if (!map_insert(map1, pair->key, pair->value)) {
 				return MEMORY_REFUSED;
@@ -430,8 +390,13 @@ map_insert(mat_map* map, const char* key, mtl_t value) {
 	// Set it to 1 and increase from there on
 	if (map->capacity == 0) {
 		map->capacity = 1;
-		// Set the properties for each new bucket
-		map_bucket* bucket = &map->buckets[i];
+		map->buckets = calloc(1, sizeof(map_bucket));
+		if (!map->buckets) {
+			free(pair.key);
+			return MEMORY_REFUSED;
+		}
+		// Set the properties for the new bucket
+		map_bucket* bucket = &map->buckets[0];
 		if (!init_bucket(bucket)) {
 			free(map->buckets);
 			free(pair.key);
@@ -439,7 +404,7 @@ map_insert(mat_map* map, const char* key, mtl_t value) {
 		}
 		// Init pairs
 		for (uint32_t j = 0; j < bucket->capacity; j++) {
-			init_pair(&bucket->pairs[j];
+			init_pair(&bucket->pairs[j]);
 		}
 	}
 	
@@ -507,7 +472,7 @@ size_t
 map_size(mat_map* map) {
 	size_t count = 0;
 	for (uint32_t i = 0; i < map->capacity; i++) {
-		map_bucket* bucket = map->buckets[i];
+		map_bucket* bucket = &map->buckets[i];
 		count += bucket->active;
 	}
 	return count;
@@ -516,9 +481,9 @@ map_size(mat_map* map) {
 int 
 map_clear(mat_map* map) {
 	for (uint32_t i = 0; i < map->capacity; i++) {
-		map_bucket* bucket = map->buckets[i];
+		map_bucket* bucket = &map->buckets[i];
 		for (uint32_t j = 0; j < bucket->active; j++) {
-			map_pair* pair = bucket->pairs[j];
+			map_pair* pair = &bucket->pairs[j];
 			// 1. Free memory
 			destroy_pair(pair);
 			// 2. Remove from bucket.
@@ -534,5 +499,27 @@ map_clear(mat_map* map) {
 	return SUCCESS;
 }
 
+keys_list_t
+map_keys(mat_map* map) {
+	keys_list_t list = {0};
+	list.used = map_size(map);
+	list.keys = calloc(list.used, sizeof(const char*));
+	uint32_t k = 0;
+	for (uint32_t i = 0; i < map->capacity; i++) {
+		map_bucket* bucket = &map->buckets[i];
+		for (uint32_t j = 0; j < bucket->active; j++) {
+			map_pair* pair = &bucket->pairs[j];
+			if (pair->key != NULL) {
+				list.keys[k++] = pair;
+			}
+		}
+	}
+	return list;
+}
 
-#endif
+void
+keys_list_destroy(keys_list_t* list) {
+	free(list->keys);
+	list->keys = NULL;
+	list->used = 0;	
+}
