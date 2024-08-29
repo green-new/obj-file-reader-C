@@ -99,8 +99,8 @@ void mtl_print(mtl_t* mat) {
 		mat->map_Ka.scale[1], mat->map_Ka.scale[2]);
 	printf("\t\tTurbulence (t; xyz): [%f, %f, %f]\n", mat->map_Ka.turbulence[0],
 		mat->map_Ka.turbulence[1], mat->map_Ka.turbulence[2]);
-	printf("\t\tResolution (texres; width x height): [%d, %d]\n", mat->map_Ka.texres.w, 
-		mat->map_Ka.texres.h);
+	printf("\t\tResolution (texres; width x height): [%d, %d]\n", 
+		mat->map_Ka.texres.w, mat->map_Ka.texres.h);
 	printf("\tmap_Kd: [\"%s\"]\n", mat->map_Kd.filename);
 	printf("\t\tHorizontal blending (blendu): [%d]\n", mat->map_Kd.blendu);
 	printf("\t\tVertical blending (blendv): [%d]\n", mat->map_Kd.blendv);
@@ -114,8 +114,8 @@ void mtl_print(mtl_t* mat) {
 		mat->map_Kd.scale[1], mat->map_Kd.scale[2]);
 	printf("\t\tTurbulence (t; xyz): [%f, %f, %f]\n", mat->map_Kd.turbulence[0],
 		mat->map_Kd.turbulence[1], mat->map_Kd.turbulence[2]);
-	printf("\t\tResolution (texres; width x height): [%d, %d]\n", mat->map_Kd.texres.w, 
-		mat->map_Kd.texres.h);
+	printf("\t\tResolution (texres; width x height): [%d, %d]\n", 
+		mat->map_Kd.texres.w, mat->map_Kd.texres.h);
 	printf("\tmap_Ks: [\"%s\"]\n", mat->map_Ks.filename);
 	printf("\t\tHorizontal blending (blendu): [%d]\n", mat->map_Ks.blendu);
 	printf("\t\tVertical blending (blendv): [%d]\n", mat->map_Ks.blendv);
@@ -129,8 +129,8 @@ void mtl_print(mtl_t* mat) {
 		mat->map_Ks.scale[1], mat->map_Ks.scale[2]);
 	printf("\t\tTurbulence (t; xyz): [%f, %f, %f]\n", mat->map_Ks.turbulence[0],
 		mat->map_Ks.turbulence[1], mat->map_Ks.turbulence[2]);
-	printf("\t\tResolution (texres; width x height): [%d, %d]\n", mat->map_Ks.texres.w, 
-		mat->map_Ks.texres.h);
+	printf("\t\tResolution (texres; width x height): [%d, %d]\n", 
+		mat->map_Ks.texres.w, mat->map_Ks.texres.h);
 	printf("\tmap_Ns: [\"%s\"]\n", mat->map_Ns.filename);
 	printf("\t\tHorizontal blending (blendu): [%d]\n", mat->map_Ns.blendu);
 	printf("\t\tVertical blending (blendv): [%d]\n", mat->map_Ns.blendv);
@@ -144,8 +144,8 @@ void mtl_print(mtl_t* mat) {
 		mat->map_Ns.scale[1], mat->map_Ns.scale[2]);
 	printf("\t\tTurbulence (t; xyz): [%f, %f, %f]\n", mat->map_Ns.turbulence[0],
 		mat->map_Ns.turbulence[1], mat->map_Ns.turbulence[2]);
-	printf("\t\tResolution (texres; width x height): [%d, %d]\n", mat->map_Ns.texres.w, 
-		mat->map_Ns.texres.h);
+	printf("\t\tResolution (texres; width x height): [%d, %d]\n", 
+		mat->map_Ns.texres.w, mat->map_Ns.texres.h);
 	printf("\tmap_d: [\"%s\"]\n", mat->map_d.filename);
 	printf("\t\tHorizontal blending (blendu): [%d]\n", mat->map_d.blendu);
 	printf("\t\tVertical blending (blendv): [%d]\n", mat->map_d.blendv);
@@ -324,7 +324,8 @@ void mtl_fprint(FILE* file, mtl_t* mat) {
 	fprintf(file, "\t\tResolution (texres; width x height): [%d, %d]\n", 
 		mat->map_Ns.texres.w, mat->map_Ns.texres.h);
 	fprintf(file, "\tmap_d: [\"%s\"]\n", mat->map_d.filename);
-	fprintf(file, "\t\tHorizontal blending (blendu): [%d]\n", mat->map_d.blendu);
+	fprintf(file, "\t\tHorizontal blending (blendu): [%d]\n", 
+		mat->map_d.blendu);
 	fprintf(file, "\t\tVertical blending (blendv): [%d]\n", mat->map_d.blendv);
 	fprintf(file, "\t\tClamping (clamp): [%d]\n", mat->map_d.clamp);
 	fprintf(file, "\t\tImfchan: [%d]\n", mat->map_d.imfchan);
