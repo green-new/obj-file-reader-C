@@ -9,8 +9,8 @@
 
 typedef struct {
 	const char* data;
-	uint32_t offset;
-	uint32_t length;
+	unsigned int offset;
+	unsigned int length;
 } buffer_t;
 
 int

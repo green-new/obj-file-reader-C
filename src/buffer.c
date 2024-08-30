@@ -16,7 +16,7 @@ buffer_get_float(buffer_t* src, float* dest) {
 	char numstr[N] = {0};
 	unsigned int i = 0;
 	for (; i < N && ; i++) {
-		switch(buffer_start(src)[i]) {
+		switch (buffer_start(src)[i]) {
 			case '0':
 			case '1':
 			case '2':
@@ -60,7 +60,7 @@ buffer_get_int(buffer_t* src, int* dest) {
 	char numstr[N] = {0};
 	unsigned int i = 0;
 	for (; i < N; i++) {
-		switch(buffer_start(src)[i]) {
+		switch (buffer_start(src)[i]) {
 			case '0':
 			case '1':
 			case '2':

@@ -13,11 +13,25 @@ typedef struct {
 } token_node_t;
 
 typedef struct {
-	const char* origstr;
 	token_node_t* head;
 	unsigned int used;
 } token_list_t;
 
-token_list_t tokenize(const char* str, const char* delim);
+int 
+tokennode_create(token_node_t* out);
+
+int 
+tokenlist_create(token_list_t* out);
+
+int  
+tokenize(token_list_t* const out, 
+	const char* const str, 
+	const char* const delim);
+
+void 
+tokennode_destroy(token_node_t* node);
+
+void 
+tokenlist_destroy(token_list_t* list);
 
 #endif
