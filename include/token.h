@@ -7,6 +7,8 @@
 #ifndef BUFFER_H_INCLUDED
 #define BUFFER_H_INCLUDED
 
+#include "buffer.h"
+
 typedef struct {
 	buffer_t data;
 	token_node_t* next;
