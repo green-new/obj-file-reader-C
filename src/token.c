@@ -1,6 +1,7 @@
 #include "defs.h"
-#include "token.h"
+#include <stdlib.h>
 #include <string.h>
+#include "token.h"
 
 int 
 tokennode_create(token_node_t* node) {
@@ -23,13 +24,17 @@ tokenlist_create(token_list_t* out) {
 }
 
 int 
-tokenize(token_list_t* out, const char* const str, const char* const delim) {
+tokenize(token_list_t* out, const char* str, const char* const delim) {
 	token_node_t* p = out->head;
 	const char* token;
 	unsigned int begin = 0;
 	unsigned int end = 0;
 	unsigned int delim_len = strlen(delim);
-	while (str[begin] != '\0' && token = strstr(str + begin, delim)) {
+	while (1) {
+		token = strstr(str + begin, delim);
+		if (str[begin] != '\0' || !token) {
+			break;
+		}
 		end = (unsigned int) (token - str);
 		if (end == begin) {
 			begin += delim_len;
@@ -47,7 +52,7 @@ tokenize(token_list_t* out, const char* const str, const char* const delim) {
 		}
 		p = p->next;
 		out->used++;
-		begin = (unsigned int) (token + delim_len);
+		begin = (unsigned int) (token - str + delim_len);
 	}
 	return SUCCESS;
 }

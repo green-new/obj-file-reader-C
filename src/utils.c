@@ -35,15 +35,18 @@ const type_t dataformat) {
 				// Reallocates the at 'buffer' to handle the width of the 
 				// provided string (e.g., the 'Cube' part of a 'o Cube' 
 				// command).
-                ((char**)buffer)[o] = 
-					realloc(((char**)buffer)[o], strlen(token) + 1);
+                char* temp = realloc(((char**)buffer)[o], strlen(token) + 1);
+                if (!temp) {
+                    return MEMORY_REFUSED;
+                }
+                ((char**)buffer)[o] = temp;
                 memset(((char**)buffer)[o], 0, sizeof *((char**)buffer)[o]);
                 strcpy(((char**)buffer)[o], token);
             break;
             default: break;
         }
     }
-    return 0;
+    return SUCCESS;
 }
 
 void 

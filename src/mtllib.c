@@ -14,7 +14,7 @@ mtllib_t mtllib_create(void) {
 
 void mtllib_destroy(mtllib_t* lib) {
 	map_destroy(&lib->map);
-	free(lib->name);
+	free((void*)lib->name);
 }
 
 void mtllib_print(mtllib_t* lib) {
@@ -34,13 +34,14 @@ void mtllib_fprint(FILE* file, mtllib_t* lib) {
 	fprintf(file, "Used: %ud", used);
 	keys_list_t list = map_keys(&lib->map);
 	for (uint32_t i = 0; i < list.used; i++) {
-		mtl_fprint(file, list.keys[i]);
+        mtl_t mtl;
+        map_at(&lib->map, list.keys[i], &mtl);
+		mtl_fprint(file, &mtl);
 	}
 }
 
 int mtllib_read(const char* fn, mtllib_t* lib) {
     mtllib_destroy(lib);
-    int RETURN_CODE = SUCCESS;
     FILE* file = fopen(fn, "r");
     if (!file) {
         return INVALID_FILE;
@@ -51,7 +52,7 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
     char line_buffer[MAX_LINE_LEN];
     while (fgets(line_buffer, sizeof line_buffer, file)) {
         const char* type = strtok(line_buffer, " ");
-        mtl_t* curr_mat;
+        mtl_t* curr_mat = {0};
         // TODO: bounds checks on certain values
         if (strequ(type, "newmtl")) {
 			char* name = strtok(line_buffer, NULL);
@@ -61,24 +62,24 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
 			}
 			map_at(&lib->map, name, curr_mat);
         } else if (strequ(type, "Ka")) {
-            init_3f(curr_mat.ambient);
+            init_3f(curr_mat->ambient);
         } else if (strequ(type, "Kd")) {
-            init_3f(curr_mat.diffuse);
+            init_3f(curr_mat->diffuse);
         } else if (strequ(type, "Ks")) {
-            init_3f(curr_mat.specular);
+            init_3f(curr_mat->specular);
         } else if (strequ(type, "Tf")) {
-            init_3f(curr_mat.tm_filter);
+            init_3f(curr_mat->tm_filter);
         } else if (strequ(type, "illum")) {
-            init_1u(&curr_mat.illum);
+            init_1u(&curr_mat->illum);
         } else if(strequ(type, "d")) {
             // TODO: support -halo
-            init_1f(&curr_mat.transparency);
+            init_1f(&curr_mat->dissolve);
         } else if (strequ(type, "Ns")) {
-            init_1u(&curr_mat.specular_exponent);
+            init_1u(&curr_mat->specular_exponent);
         } else if (strequ(type, "sharpness")) {
-            init_1u(&curr_mat.sharpness);
+            init_1u(&curr_mat->sharpness);
         } else if(strequ(type, "Ni")) {
-            init_1f(&curr_mat.optical_density);
+            init_1f(&curr_mat->optical_density);
         }
     }
     #undef init_3f

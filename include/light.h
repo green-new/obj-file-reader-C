@@ -23,5 +23,4 @@ typedef struct {
 
 void reflect(light_t* light);
 
-#ifndef ILLUM_H_INCLUDED
-#define ILLUM_H_INCLUDED
+#endif

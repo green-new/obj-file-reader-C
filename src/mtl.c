@@ -64,7 +64,7 @@ mtl_t mtl_create(void) {
 }
 
 void mtl_destroy(mtl_t* material) {
-	free(material->name);
+	free((void*)material->name);
 }
 
 void mtl_print(mtl_t* mat) {
@@ -85,7 +85,7 @@ void mtl_print(mtl_t* mat) {
 		mat->dissolve.halo);
 	printf("\tSpecular exponent: [%d]\n", mat->specular_exponent);
 	printf("\tSharpness: [%d]\n", mat->sharpness);
-	printf("\tOptical density: [%d]\n", mat->optical_density);
+	printf("\tOptical density: [%f]\n", mat->optical_density);
 	printf("\tmap_Ka: [\"%s\"]\n", mat->map_Ka.filename);
 	printf("\t\tHorizontal blending (blendu): [%d]\n", mat->map_Ka.blendu);
 	printf("\t\tVertical blending (blendv): [%d]\n", mat->map_Ka.blendv);
@@ -206,8 +206,7 @@ void mtl_print(mtl_t* mat) {
 		mat->bump.turbulence[1], mat->bump.turbulence[2]);
 	printf("\t\tResolution (texres; width x height): [%d, %d]\n", 
 		mat->bump.texres.w, mat->bump.texres.h);
-	printf("\tReflection map (refl):\n", mat->bump.texres.w, 
-		mat->bump.texres.h);
+	printf("\tReflection map (refl):\n");
 	refl_node_t* p = mat->refl_map.head;
 	while (p) {
 		printf("\tFilename: [\"%s\"]\n", p->options.filename);
@@ -254,7 +253,7 @@ void mtl_fprint(FILE* file, mtl_t* mat) {
 		mat->dissolve.halo);
 	fprintf(file, "\tSpecular exponent: [%d]\n", mat->specular_exponent);
 	fprintf(file, "\tSharpness: [%d]\n", mat->sharpness);
-	fprintf(file, "\tOptical density: [%d]\n", mat->optical_density);
+	fprintf(file, "\tOptical density: [%f]\n", mat->optical_density);
 	fprintf(file, "\tmap_Ka: [\"%s\"]\n", mat->map_Ka.filename);
 	fprintf(file, "\t\tHorizontal blending (blendu): [%d]\n", 
 		mat->map_Ka.blendu);
@@ -324,8 +323,7 @@ void mtl_fprint(FILE* file, mtl_t* mat) {
 	fprintf(file, "\t\tResolution (texres; width x height): [%d, %d]\n", 
 		mat->map_Ns.texres.w, mat->map_Ns.texres.h);
 	fprintf(file, "\tmap_d: [\"%s\"]\n", mat->map_d.filename);
-	fprintf(file, "\t\tHorizontal blending (blendu): [%d]\n", 
-		mat->map_d.blendu);
+	fprintf(file, "\t\tHorizontal blending (blendu): [%d]\n", mat->map_d.blendu);
 	fprintf(file, "\t\tVertical blending (blendv): [%d]\n", mat->map_d.blendv);
 	fprintf(file, "\t\tClamping (clamp): [%d]\n", mat->map_d.clamp);
 	fprintf(file, "\t\tImfchan: [%d]\n", mat->map_d.imfchan);
@@ -389,8 +387,7 @@ void mtl_fprint(FILE* file, mtl_t* mat) {
 		mat->bump.turbulence[2]);
 	fprintf(file, "\t\tResolution (texres; width x height): [%d, %d]\n", 
 		mat->bump.texres.w, mat->bump.texres.h);
-	fprintf(file, "\tReflection map (refl):\n", mat->bump.texres.w, 
-		mat->bump.texres.h);
+	fprintf(file, "\tReflection map (refl):\n");
 	refl_node_t* p = mat->refl_map.head;
 	while (p) {
 		fprintf(file, "\tFilename: [\"%s\"]\n", p->options.filename);

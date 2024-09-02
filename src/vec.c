@@ -33,12 +33,21 @@ sub(const vec_t* a, const vec_t* b) {
 	};
 }
 
-void
-div(const vec_t* a, float q) {
+vec_t 
+mul(const vec_t* a, const vec_t* b) {
 	return (vec_t) {
-		.x = a->x / q,
-		.y = a->y / q,
-		.z = a->z / q
+		.x = a->x * b->x,
+		.y = a->y * b->y,
+		.z = a->z * b->z
+	};
+}
+
+vec_t
+div(const vec_t* a, const vec_t* b) {
+	return (vec_t) {
+		.x = a->x / b->x,
+		.y = a->y / b->y,
+		.z = a->z / b->z
 	};
 }
 

@@ -39,7 +39,7 @@ dot(const vec_t* a, const vec_t* b);
  * @brief Vector addition, component wise.
  * @param a First operand.
  * @param b Second operand.
- * @return The result of adding a + b.
+ * @return The result of a + b.
  */
 vec_t
 add(const vec_t* a, const vec_t* b);
@@ -48,10 +48,28 @@ add(const vec_t* a, const vec_t* b);
  * @brief Vector subtraction, component-wise.
  * @param a First operand.
  * @param b Second operand.
- * @return The result of adding a - b.
+ * @return The result of a - b.
  */
 vec_t
 sub(const vec_t* a, const vec_t* b);
+
+/** 
+ * @brief Vector multiplication, component-wise.
+ * @param a First operand.
+ * @param b Second operand.
+ * @return The result of a * b.
+ */
+vec_t
+mul(const vec_t* a, const vec_t* b);
+
+/** 
+ * @brief Vector division, component-wise.
+ * @param a First operand.
+ * @param b Second operand.
+ * @return The result of adding a / b.
+ */
+vec_t
+div(const vec_t* a, const vec_t* b);
 
 /** 
  * @brief Vector magnitude.

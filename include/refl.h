@@ -29,15 +29,17 @@ typedef struct {
 	texres_t		texres;
 } refl_opts_t;
 
-/** @struct refl_node_t
+/** 
+ * @struct refl_node_t
  * @brief Reflection map list node containing individual options.
  */
-typedef struct {
+typedef struct refl_node_t {
 	refl_opts_t		options;
-	refl_node_t*	next;
+	struct refl_node_t*	next;
 } refl_node_t;
 
-/** @struct refl_t
+/** 
+ * @struct refl_t
  * @brief Reflection map options.
  */
 typedef struct {
@@ -49,20 +51,23 @@ typedef struct {
 // 		refl_t.
 // -----------------------------------------------------------------------------
 
-/** @brief Create an empty reflection map.
+/** 
+ * @brief Create an empty reflection map.
  * @param refl The reflection map to create.
  * @param options The options to use to create a first node.
  * @return [SUCCESS, MEMORY_REFUSED]
  */
 int
-refl_create(refl_t* refl);
+refl_create(refl_t* refl, refl_opts_t options);
 
-/** @brief Destroy a reflection map.
+/** 
+ * @brief Destroy a reflection map.
  */
 void
 refl_destroy(refl_t* refl);
 
-/** @brief Append to the reflection map with new options.
+/** 
+ * @brief Append to the reflection map with new options.
  * @return [SUCCESS, MEMORY_REFUSED]
  */
 int

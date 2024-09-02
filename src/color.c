@@ -1,40 +1,81 @@
 #include "color.h"
+#include <math.h>
 
-inline int_color_t
-from_floats(float r, float g, float b, float a) {
-	return int_color_t { 
-		.hex = (
-			  (((uint32_t)a * 255)) 
-			| (((uint32_t)b * 255) << 8) 
-			| (((uint32_t)g * 255) << 16) 
-			| (((uint32_t)r * 255) << 24)
-		)
-	};
-}
-
-inline float_color_t
-from_ints(uint8_t a, uint8_t r, uint8_t g, uint8_t b) {
-	return float_color_t { 
-		.r = ((float)r / 255.0f), 
-		.g = ((float)g / 255.0f),
-		.b = ((float)b / 255.0f),
-		.a = ((float)a / 255.0f)
-	};
-}
-
-inline float_color_t
-from_int(uint32_t hex) {
-	return float_color_t {
-		.r = ((float)(hex & 0x000000ff) / 255.0f),
-		.g = ((float)(hex & 0x0000ff00) / 255.0f),
-		.b = ((float)(hex & 0x00ff0000) / 255.0f),
-		.a = ((float)(hex & 0xff000000) / 255.0f),
-	};
-}
-
-color_t
-mul(const color_t* c1, const color_t* c2) {
-	color_t res;
-	
+inline color_t 
+color_bitand(const color_t* c1, const color_t* c2) {
+	color_t res = {0};
+	res.hex = c1->hex & c2->hex;
 	return res;
+}
+
+inline color_t 
+color_bitor(const color_t* c1, const color_t* c2) {
+	color_t res = {0};
+	res.hex = c1->hex | c2->hex;
+	return res;
+}
+
+inline color_t 
+color_bitxor(const color_t* c1, const color_t* c2) {
+	color_t res = {0};
+	res.hex = c1->hex ^ c2->hex;
+	return res;
+}
+
+inline color_t 
+color_add(const color_t* c1, const color_t* c2) {
+	color_t res = {0};
+	res.hex = c1->hex + c2->hex;
+	return res;
+}
+
+inline color_t 
+color_sub(const color_t* c1, const color_t* c2) {
+	color_t res = {0};
+	res.hex = c1->hex - c2->hex;
+	return res;
+}
+
+inline color_t
+color_mul(const color_t* c1, const color_t* c2) {
+	color_t res = {0};
+	res.hex = c1->hex * c2->hex;
+	return res;
+}
+
+inline color_t 
+color_div(const color_t* c1, const color_t* c2) {
+	color_t res = {0};
+	res.hex = c1->hex / c2->hex;
+	return res;
+}
+
+inline color_t
+color_from_floats(const colorf_t* c1) {
+	return (color_t) { 
+		.rgba.r = (uint32_t)(c1->r * 255),
+		.rgba.g = (uint32_t)(c1->b * 255) << 8,
+		.rgba.b = (uint32_t)(c1->g * 255) << 16,
+		.rgba.a = (uint32_t)(c1->r * 255) << 24
+	};
+}
+
+inline color_t
+color_from_ints(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
+	return (color_t) {
+		.rgba.r = r,
+		.rgba.g = g,
+		.rgba.b = b,
+		.rgba.a = a
+	};
+}
+
+inline color_t
+color_from_int(uint32_t hex) {
+	return (color_t) {
+		.rgba.r = (hex & 0x000000ff),
+		.rgba.g = (hex & 0x0000ff00) << 8,
+		.rgba.b = (hex & 0x00ff0000) << 16,
+		.rgba.a = (hex & 0xff000000) << 24
+	};
 }

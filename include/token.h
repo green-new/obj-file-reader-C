@@ -4,14 +4,14 @@
  * @date 8/29/2024
  * @brief Definition of tokens and tokenizer functions.
  */
-#ifndef BUFFER_H_INCLUDED
-#define BUFFER_H_INCLUDED
+#ifndef TOKEN_H_INCLUDED
+#define TOKEN_H_INCLUDED
 
 #include "buffer.h"
 
-typedef struct {
+typedef struct token_node_t {
 	buffer_t data;
-	token_node_t* next;
+	struct token_node_t* next;
 } token_node_t;
 
 typedef struct {
@@ -27,7 +27,7 @@ tokenlist_create(token_list_t* out);
 
 int  
 tokenize(token_list_t* const out, 
-	const char* const str, 
+	const char* str, 
 	const char* const delim);
 
 void 

@@ -76,17 +76,6 @@ typedef struct {
 	uint32_t load_factor;
 } mat_map;
 
-/** Creates an empty map with a specific initial capacity.
- * @param map Pointer to the map to initialize. Cannot be NULL.
- * @param capacity The initial capacity of this map. Must be an unsigned integer
- * greater than or equal to 0.
- * @param load_factor The load factor. When the number of active buckets exceeds 
- * this value, the map is automatically rehashed after subsequent insertions.
- * @return [SUCCESS, MEMORY_REFUSED]
- */
-int 
-map_create(mat_map* map, uint32_t capacity, uint32_t load_factor);
-
 /** Creates an empty map with an initial capacity of 16 and load_factor of 0.75.
  * @param map Pointer to the map to initialize.
  * @return [SUCCESS, MEMORY_REFUSED]
@@ -120,7 +109,7 @@ map_copy(mat_map* map1, const mat_map* map2);
  * @return [SUCCESS, MEMORY_REFUSED]
  */
 int 
-map_insert(mat_map* map, const char* key, const mtl_t* value);
+map_insert(mat_map* map, const char* key, mtl_t value);
 
 /** Erases & frees the value at the given key in the map.
  * @param map The map.
@@ -155,7 +144,7 @@ map_size(mat_map* map);
 /** Clears this map of all elements.
  * @param map The map.
  */
-void 
+int 
 map_clear(mat_map* map);
 
 /** Return a heap-allocated list of keys.

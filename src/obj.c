@@ -177,6 +177,9 @@ static int obj_setinfo(mesh_t* mesh, FILE* file, char* err_msg) {
         } else if (strequ(type, "o") && !name_defined) {
             char* tmp_name = strtok(NULL, "\n");
             mesh->name = calloc(1, strlen(tmp_name));
+            if (!mesh->name) {
+                return MEMORY_REFUSED;
+            }
             strcpy(mesh->name, tmp_name);
             name_defined = !name_defined;
         } else if (strequ(type, "mtllib")) {
@@ -343,11 +346,13 @@ int obj_read(const char* fn, mesh_t* mesh) {
     if (!file) {
         printf("Error: invalid, inaccessible, unavailable, or nonexistent file \"%s\"\n", fn);
         RETURN_CODE = INVALID_FILE;
+        fclose(file);
         return RETURN_CODE;
     }
 
     if ((RETURN_CODE = obj_setinfo(mesh, file, err_msg)) != SUCCESS) {
         printf("%s", err_msg);
+        fclose(file);
         return RETURN_CODE;
     }
 
@@ -370,41 +375,54 @@ int obj_read(const char* fn, mesh_t* mesh) {
     !(mesh->normal_data = calloc(mesh->num_normals, sizeof(normal_t))) ||
     !(mesh->texture_data = calloc(mesh->num_textures, sizeof(texture_t))) ||
     !(mesh->face_data = calloc(mesh->num_faces, sizeof(face_t)))) {
+        fclose(file);
+        free(face_buffers.pos_idx_buffer);
+        free(face_buffers.tex_idx_buffer);
+        free(face_buffers.norm_idx_buffer);
+        free(face_buffers.face_str_buffer);
+        free(face_buffers.pos_idx_buffer);
         return MEMORY_REFUSED;
     }
     for (uint32_t i = 0; i < mesh->face_dim; i++) {
         if (!(face_buffers.face_str_buffer[i] = calloc(mesh->face_dim, sizeof *face_buffers.face_str_buffer[i]))) {
+            fclose(file);
             return MEMORY_REFUSED;
         }
     }
     for (uint32_t i = 0; i < mesh->num_vertices; i++) {
         if (!(mesh->vertex_data[i].pos = calloc(mesh->vertex_dim, sizeof *mesh->vertex_data[i].pos))) {
+            fclose(file);
             return MEMORY_REFUSED;
         }
     }
     for (uint32_t i = 0; i < mesh->num_normals; i++) {
         if (!(mesh->normal_data[i].norm = calloc(mesh->vertex_dim, sizeof *mesh->normal_data[i].norm))) {
+            fclose(file);
             return MEMORY_REFUSED;
         }
     }
     for (uint32_t i = 0; i < mesh->num_textures; i++) {
         if (!(mesh->texture_data[i].tex = calloc(mesh->tex_dim, sizeof *mesh->texture_data[i].tex))) {
+            fclose(file);
             return MEMORY_REFUSED;
         }
     }
     for (uint32_t i = 0; i < mesh->num_faces; i++) {
         if (mesh->face_flag.flag & pos_flag) {
             if (!(mesh->face_data[i].indices = calloc(mesh->face_dim, sizeof *mesh->face_data[i].indices))) {
+                fclose(file);
                 return MEMORY_REFUSED;
             }
         }
         if (mesh->face_flag.flag & norm_flag) {
             if (!(mesh->face_data[i].norms = calloc(mesh->face_dim, sizeof *mesh->face_data[i].norms))) {
+                fclose(file);
                 return MEMORY_REFUSED;
             }
         }
         if (mesh->face_flag.flag & tex_flag) {
             if (!(mesh->face_data[i].texs = calloc(mesh->face_dim, sizeof *mesh->face_data[i].texs))) {
+                fclose(file);
                 return MEMORY_REFUSED;
             }
         }
