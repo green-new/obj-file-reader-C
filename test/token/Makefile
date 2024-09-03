@@ -1,8 +1,9 @@
 CC:=gcc
-CFLAGS:=-g -Wall -std=c99 -pedantic -O3
-# LDLIBS:=
+CFLAGS:=-g -Wall -std=c99 -pedantic -O0
+LDIR=-L./../../bin
+LDLIBS:=-lmtlobj
 # 'include' is 2 dirs back
-LDFLAGS:=-I/../../include
+LDFLAGS:=-I./../../include
 
 # directories found in the module
 BIND:=bin
@@ -23,8 +24,8 @@ OUTPUT:=$(addprefix ${BIND}/,${OUTPUT})
 
 .PHONY: clean mkdir run
 
-main: ${OBJS}
-	${LINK.o} ${OBJS} -o ${OUTPUT}
+main: clean ${OBJS}
+	${LINK.o} ${OBJS} ${LDIR} ${LDLIBS} -o ${OUTPUT}
 
 # cleans binaries except src files
 clean:
@@ -39,7 +40,7 @@ mkdir:
 	-mkdir ${OUTD} &> /dev/null
 
 # compiles and executes and outputs to 'output.txt'
-run: ${OBJS}
+run:
 	./${OUTPUT} > ${OUTD}/output.txt
 
 obj/%.o: src/%.c mkdir
