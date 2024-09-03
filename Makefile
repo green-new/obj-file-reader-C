@@ -7,19 +7,16 @@ MODELD:=models
 BIND:=bin
 OBJD:=obj
 SRCD:=src
-SRC:=utils.c obj.c mtl.c color.c material_map.c vec.c light.c mtllib.c refl.c buffer.c token.c
-SRC:=$(addprefix ${SRCD}/,${SRC})
-OBJ:=$(subst .c,.o,$(subst ${SRCD},${OBJD},${SRC}))
+SRCS:=$(wildcard ${SRCD}/*.c)
+OBJS:=$(subst .c,.o,$(subst ${SRCD},${OBJD},${SRCS}))
 
-OUTPUT:=main
+OUTPUT:=libmtlobj.a
 OUTPUT:=$(addprefix ${BIND}/,${OUTPUT})
 
-.PHONY: clean run
+.PHONY: clean mkdir
 
-
-main: ${OBJ}
-	${LINK.o} ${OBJ} -o ${OUTPUT}
-	-cp -a ${MODELD}/. ${BIND}/${MODELD} 
+main: clean ${OBJS}
+	ar rcs ${OUTPUT} ${OBJS}
 
 mkdir:
 	-mkdir ${BIND}
@@ -29,12 +26,5 @@ obj/%.o: src/%.c mkdir
 	${COMPILE.c} ${LDFLAGS} $< -o ${OBJD}/$*.o
 
 clean:
-	-rm -f ${OBJ}
-	-rm -f ${OUTPUT}
 	-rm -rf ${BIND}/*
-	-rmdir --ignore-fail-on-non-empty ${BIND}/
 	-rm -rf ${OBJD}/*
-	-rmdir --ignore-fail-on-non-empty ${OBJD}/
-
-run:
-	./${OUTPUT}

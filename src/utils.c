@@ -31,7 +31,7 @@ const type_t dataformat) {
             case TYPE_UINT:
                 ((uint32_t*)buffer)[o] = atoi(token);
             break;
-            case TYPE_STR:
+            case TYPE_STR: ;
 				// Reallocates the at 'buffer' to handle the width of the 
 				// provided string (e.g., the 'Cube' part of a 'o Cube' 
 				// command).

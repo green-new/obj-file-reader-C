@@ -3,66 +3,78 @@
 #include <string.h>
 #include "token.h"
 
+// -----------------------------------------------------------------------------
+// Static utility
+// -----------------------------------------------------------------------------
 int 
-tokennode_create(token_node_t* node) {
-	node = malloc(sizeof(token_node_t));
-	if (!node) {
+tokennode_create(token_node_t** node) {
+	(*node) = malloc(sizeof(token_node_t));
+	if ((*node) == NULL) {
 		return MEMORY_REFUSED;
 	}
-	node->data = (buffer_t) {0};
-	node->next = NULL;
+	(*node)->data = (buffer_t) { .data = NULL, .length = 0, .offset = 0 };
+	(*node)->next = NULL;
 	return SUCCESS;
 }
 
+void 
+tokennode_destroy(token_node_t** node) {
+	(*node)->data = (buffer_t) { .data = NULL, .length = 0, .offset = 0 };
+	(*node)->next = NULL;
+	free((*node));
+}
+
+// -----------------------------------------------------------------------------
+// Implementation
+// -----------------------------------------------------------------------------
 int 
 tokenlist_create(token_list_t* out) {
-	if (!tokennode_create(out->head)) {
-		return MEMORY_REFUSED;
+	int code = SUCCESS;
+	if ((code = tokennode_create(&out->head)) != SUCCESS) {
+		return code;
 	}
 	out->used = 0;
 	return SUCCESS;
 }
 
 int 
-tokenize(token_list_t* out, const char* str, const char* const delim) {
+tokenize(token_list_t* out, const char* str, const char* delim) {
+	int code = SUCCESS;
 	token_node_t* p = out->head;
+	token_node_t* q = NULL;
 	const char* token;
 	unsigned int begin = 0;
 	unsigned int end = 0;
 	unsigned int delim_len = strlen(delim);
-	while (1) {
+	unsigned int str_len = strlen(str);
+	while (begin < str_len) {
 		token = strstr(str + begin, delim);
-		if (str[begin] != '\0' || !token) {
-			break;
+		if (token == NULL) {
+			return SUCCESS;
 		}
 		end = (unsigned int) (token - str);
-		if (end == begin) {
+		buffer_t buf = (buffer_t) { 
+			.data = str, .offset = begin, .length = end - begin 
+			};
+		if (end - begin < delim_len) {
 			begin += delim_len;
 			continue;
 		}
-		buffer_t buf = (buffer_t) {0};
-		buf.data = str;
-		buf.offset = begin;
-		buf.length = end - begin;
-		p->data = buf;
-		if (!p->next) {
-			if (!tokennode_create(p->next)) {
-				return MEMORY_REFUSED;
+		if (!p) {
+			if ((code = tokennode_create(&p)) != SUCCESS) {
+				return code;
+			}
+			if (q) {
+				q->next = p;
 			}
 		}
+		p->data = buf;
+		q = p;
 		p = p->next;
 		out->used++;
 		begin = (unsigned int) (token - str + delim_len);
 	}
 	return SUCCESS;
-}
-
-
-void 
-tokennode_destroy(token_node_t* node) {
-	node->data = (buffer_t) {0};
-	node->next = NULL;
-	free(node);
 }
 
 void 
@@ -71,8 +83,7 @@ tokenlist_destroy(token_list_t* list) {
 	while (p) {
 		token_node_t* temp = p;
 		p = p->next;
-		temp->data = (buffer_t) {0};
-		temp->next = NULL;
-		free(temp);
+		tokennode_destroy(&temp);
 	}
+	(*list) = (token_list_t) { .head = NULL, .used = 0 };
 }

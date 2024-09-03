@@ -7,6 +7,12 @@
 #ifndef BUFFER_H_INCLUDED
 #define BUFFER_H_INCLUDED
 
+#define buffer_start(buffer) ((buffer)->data + (buffer)->offset)
+#define buffer_end(buffer) ((buffer)->data + (buffer)->offset + (buffer)->length)
+#define buffer_at(buffer, index) *((buffer)->data + (buffer)->offset + index)
+#define buffer_within(buffer, index) \
+	(()((buffer)->offset + index < (buffer)->offset + (buffer)->length))
+
 typedef struct {
 	const char* data;
 	unsigned int offset;

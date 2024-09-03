@@ -2,12 +2,6 @@
 #include "defs.h"
 #include <stdlib.h>
 
-#define buffer_start(buffer) ((buffer)->data + (buffer)->offset)
-#define buffer_end(buffer) ((buffer)->data + (buffer)->offset + (buffer)->length)
-#define buffer_at(buffer, index) *((buffer)->data + (buffer)->offset + index)
-#define buffer_within(buffer, index) \
-	(()((buffer)->offset + index < (buffer)->offset + (buffer)->length))
-
 int
 buffer_get_float(buffer_t* src, float* dest) {
 	#define N 64

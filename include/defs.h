@@ -50,7 +50,7 @@
  * @todo Decide on a prefix name.
  */
 enum return_codes {
-    SUCCESS = 0,
+    SUCCESS = 1,
     MEMORY_REFUSED,
     INVALID_FILE,
     INVALID_DIMS,

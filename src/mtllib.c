@@ -52,7 +52,7 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
     char line_buffer[MAX_LINE_LEN];
     while (fgets(line_buffer, sizeof line_buffer, file)) {
         const char* type = strtok(line_buffer, " ");
-        mtl_t* curr_mat = {0};
+        mtl_t* curr_mat = NULL;
         // TODO: bounds checks on certain values
         if (strequ(type, "newmtl")) {
 			char* name = strtok(line_buffer, NULL);

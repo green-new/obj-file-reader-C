@@ -20,18 +20,12 @@ typedef struct {
 } token_list_t;
 
 int 
-tokennode_create(token_node_t* out);
-
-int 
 tokenlist_create(token_list_t* out);
 
 int  
 tokenize(token_list_t* const out, 
 	const char* str, 
-	const char* const delim);
-
-void 
-tokennode_destroy(token_node_t* node);
+	const char* delim);
 
 void 
 tokenlist_destroy(token_list_t* list);
