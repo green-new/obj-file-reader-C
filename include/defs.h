@@ -67,13 +67,17 @@ enum return_codes {
 static inline char* errstr(int return_code) {
     switch (return_code) {
         case SUCCESS:
-            return "Successful termination";
+            return "Success";
         case MEMORY_REFUSED:
-            return "Out of memory";
+            return "Memory service was refused";
         case INVALID_FILE:
             return "Could not open or create file";
         case INVALID_DIMS:
             return "Invalid or inconsistent specified number of dimensions";
+		case PARSING_FAILURE:
+			return "Improperly formatted text structure";
+		case NOT_FOUND:
+			return "Desired element could not be found";
         default: break;
     }
     return "Undefined";
