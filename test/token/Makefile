@@ -22,9 +22,9 @@ OBJS:=$(subst .c,.o,$(subst ${SRCD},${OBJD},${SRCS}))
 OUTPUT:=main
 OUTPUT:=$(addprefix ${BIND}/,${OUTPUT})
 
-.PHONY: clean mkdir run
+.PHONY: clean run
 
-main: clean ${OBJS}
+main: ${OBJS}
 	${LINK.o} ${OBJS} ${LDIR} ${LDLIBS} -o ${OUTPUT}
 
 # cleans binaries except src files
@@ -33,15 +33,9 @@ clean:
 	-rm -rf ${OBJD}/*
 	-rm -rf ${OUTD}/*
 
-# creates the output directories
-mkdir:
-	-mkdir ${BIND} &> /dev/null
-	-mkdir ${OBJD} &> /dev/null
-	-mkdir ${OUTD} &> /dev/null
-
 # compiles and executes and outputs to 'output.txt'
 run:
 	./${OUTPUT} > ${OUTD}/output.txt
 
-obj/%.o: src/%.c mkdir
+obj/%.o: src/%.c
 	${COMPILE.c} ${LDFLAGS} $< -o ${OBJD}/$*.o

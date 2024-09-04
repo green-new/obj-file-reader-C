@@ -47,6 +47,8 @@ tokenize(token_list_t* out, const char* str, const char* delim) {
 	unsigned int end = 0;
 	unsigned int delim_len = strlen(delim);
 	unsigned int str_len = strlen(str);
+	// Right-leaning delimiation e.g. "asdf;asdf;asdf;", delim = ";"
+	// results in [asdf, asdf, asdf]
 	while (begin < str_len) {
 		token = strstr(str + begin, delim);
 		if (token == NULL) {
@@ -56,10 +58,6 @@ tokenize(token_list_t* out, const char* str, const char* delim) {
 		buffer_t buf = (buffer_t) { 
 			.data = str, .offset = begin, .length = end - begin 
 			};
-		if (end - begin < delim_len) {
-			begin += delim_len;
-			continue;
-		}
 		if (!p) {
 			if ((code = tokennode_create(&p)) != SUCCESS) {
 				return code;

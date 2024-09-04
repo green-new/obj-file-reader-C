@@ -1,8 +1,9 @@
 CC:=gcc
-CFLAGS:=-g -Wall -std=c99 -pedantic -O3
+CFLAGS:=-g -Wall -std=c99 -pedantic -O0
+LDIR=-L./../../bin
 LDLIBS:=-lmtlobj
 # 'include' is 2 dirs back
-LDFLAGS:=-I/../../include
+LDFLAGS:=-I./../../include
 
 # directories found in the module
 BIND:=bin
@@ -21,10 +22,10 @@ OBJS:=$(subst .c,.o,$(subst ${SRCD},${OBJD},${SRCS}))
 OUTPUT:=main
 OUTPUT:=$(addprefix ${BIND}/,${OUTPUT})
 
-.PHONY: clean mkdir run
+.PHONY: clean run
 
 main: ${OBJS}
-	${LINK.o} ${OBJS} -o ${OUTPUT}
+	${LINK.o} ${OBJS} ${LDIR} ${LDLIBS} -o ${OUTPUT}
 
 # cleans binaries except src files
 clean:
@@ -32,15 +33,9 @@ clean:
 	-rm -rf ${OBJD}/*
 	-rm -rf ${OUTD}/*
 
-# creates the output directories
-mkdir:
-	-mkdir ${BIND} &> /dev/null
-	-mkdir ${OBJD} &> /dev/null
-	-mkdir ${OUTD} &> /dev/null
-
 # compiles and executes and outputs to 'output.txt'
-run: ${OBJS}
+run:
 	./${OUTPUT} > ${OUTD}/output.txt
 
-obj/%.o: src/%.c mkdir
+obj/%.o: src/%.c
 	${COMPILE.c} ${LDFLAGS} $< -o ${OBJD}/$*.o

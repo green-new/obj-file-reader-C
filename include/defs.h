@@ -54,7 +54,8 @@ enum return_codes {
     MEMORY_REFUSED,
     INVALID_FILE,
     INVALID_DIMS,
-	PARSING_FAILURE
+	PARSING_FAILURE,
+    NOT_FOUND
 };
 
 /** Prints a readable description of a given return code.

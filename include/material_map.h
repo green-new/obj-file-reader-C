@@ -123,9 +123,10 @@ map_erase(mat_map* map, const char* key);
  * @param key The key.
  * @param out The out parameter that is updated to the value if found. NULL if
  * no material was found.
+ * @return NOT_FOUND if it wasn't found, SUCCESS otherwise.
  */
-void 
-map_at(mat_map* map, const char* key, mtl_t* out);
+int  
+map_at(mat_map* map, const char* key, mtl_t** out);
 
 /** Determines if this map is empty or not.
  * @param map The map.
