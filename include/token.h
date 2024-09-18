@@ -10,7 +10,7 @@
 #include "buffer.h"
 
 typedef struct token_node_t {
-	buffer_t data;
+	buffer_t buf;
 	struct token_node_t* next;
 } token_node_t;
 
@@ -25,6 +25,12 @@ tokenlist_create(token_list_t* out);
 int  
 tokenize(token_list_t* const out, 
 	const char* str, 
+	const char* delim);
+	
+int 
+ntokenize(token_list_t* const out,
+	const char* str,
+	uint32_t n,
 	const char* delim);
 
 void 

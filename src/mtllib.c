@@ -1,4 +1,6 @@
 #include "mtllib.h"
+#include "token.h"
+#include <string.h>
 
 // -----------------------------------------------------------------------------
 // Implementation
@@ -43,9 +45,40 @@ void mtllib_fprint(FILE* file, mtllib_t* lib) {
 int mtllib_read(const char* fn, mtllib_t* lib) {
     mtllib_destroy(lib);
     FILE* file = fopen(fn, "r");
+	const char* mtltext; // mtl lib contents
     if (!file) {
         return INVALID_FILE;
-    }
+    } else {
+		fseek(file, 0, SEEK_END);
+		long length = ftell(file);
+		fseek(file, 0, SEEK_START);
+		mtlspec = malloc(length + 1);
+		if (mtltext) {
+			fread(mtltext, 1, length, file);
+			mtltext[length] = '\0'; // fread doesn't null terminate
+		}
+		fclose(file);
+	}
+	token_list_t cmds;
+	tokenize(&cmds, mtltext, "\n");
+	token_node_t* pcmd = cmds.head;
+	while (pcmd) {
+		token_list_t vars;
+		pvar = vars.head;
+		// get list of parameters to this command
+		ntokenize(&vars, buffer_start(pcmd->buf), pcmd->buf->length, " ");
+		// copy cmd to string
+		const char cmd[256] = { 0 };
+		strncpy(cmd, buffer_start(vars.head->buf), vars.head->length);
+		// switch on cmd type
+		if (strequ(cmd, "newmtl")) {
+			
+		}
+		// Go to the next command
+		pcmd = pcmd->next;
+	}
+	free(mtltext);
+	
     #define init_3f(buf) buffer_init(line_buffer, buf, 3, TYPE_FLOAT)
     #define init_1u(buf) buffer_init(line_buffer, buf, 1, TYPE_UINT);
     #define init_1f(buf) buffer_init(line_buffer, buf, 1, TYPE_FLOAT);

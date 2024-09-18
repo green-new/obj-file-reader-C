@@ -12,14 +12,14 @@ tokennode_create(token_node_t** node) {
 	if ((*node) == NULL) {
 		return MEMORY_REFUSED;
 	}
-	(*node)->data = (buffer_t) { .data = NULL, .length = 0, .offset = 0 };
+	(*node)->buf = (buffer_t) { .data = NULL, .length = 0, .offset = 0 };
 	(*node)->next = NULL;
 	return SUCCESS;
 }
 
 void 
 tokennode_destroy(token_node_t** node) {
-	(*node)->data = (buffer_t) { .data = NULL, .length = 0, .offset = 0 };
+	(*node)->buf = (buffer_t) { .data = NULL, .length = 0, .offset = 0 };
 	(*node)->next = NULL;
 	free((*node));
 }
@@ -38,7 +38,7 @@ tokenlist_create(token_list_t* out) {
 }
 
 int 
-tokenize(token_list_t* out, const char* str, const char* delim) {
+tokenize(token_list_t* const out, const char* str, const char* delim) {
 	int code = SUCCESS;
 	token_node_t* p = out->head;
 	token_node_t* q = NULL;
@@ -66,7 +66,44 @@ tokenize(token_list_t* out, const char* str, const char* delim) {
 				q->next = p;
 			}
 		}
-		p->data = buf;
+		p->buf = buf;
+		q = p;
+		p = p->next;
+		out->used++;
+		begin = (unsigned int) (token - str + delim_len);
+	}
+	return SUCCESS;
+}
+
+int 
+ntokenize(token_list_t* const out, const char* str, uint32_t n, const char* delim) {
+	int code = SUCCESS;
+	token_node_t* p = out->head;
+	token_node_t* q = NULL;
+	const char* token;
+	unsigned int begin = 0;
+	unsigned int end = 0;
+	unsigned int delim_len = strlen(delim);
+	// Right-leaning delimiation e.g. "asdf;asdf;asdf;", delim = ";"
+	// results in [asdf, asdf, asdf]
+	while (begin < n) {
+		token = strstr(str + begin, delim);
+		if (token == NULL) {
+			return SUCCESS;
+		}
+		end = (unsigned int) (token - str);
+		buffer_t buf = (buffer_t) { 
+			.data = str, .offset = begin, .length = end - begin 
+			};
+		if (!p) {
+			if ((code = tokennode_create(&p)) != SUCCESS) {
+				return code;
+			}
+			if (q) {
+				q->next = p;
+			}
+		}
+		p->buf = buf;
 		q = p;
 		p = p->next;
 		out->used++;
