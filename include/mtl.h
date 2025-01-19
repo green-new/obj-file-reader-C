@@ -21,13 +21,15 @@
 #include "refl.h"
 #include "utils.h"
 
+#define MAX_MATERIAL_NAME 255
+
 /** @struct mtl_t
  * @brief Material data format as defined from
  * http://paulbourke.net/dataformats/mtl/.
  */
-typedef struct {
-	/** Name of this material type. */
-    const char* name;
+typedef struct mtl_t {
+	/** Name of this material type. The maximum length is 255. */
+    const char name[MAX_MATERIAL_NAME];
 	/** Specifies the ambient reflectivity (Ka) using rgb values 
 	 * scaled from [0, 1]. */
     float ambient[3];
@@ -71,7 +73,7 @@ typedef struct {
 	/** Dissolve (transparency) map. */
 	map_d_t	map_d;
 	/** Antialiasing map. */
-	map_aat_t antialias;
+	map_aat_t map_aat;
 	/** Texture decaling. */
 	decal_t	decal;
 	/** Texture distortion map. */

@@ -76,7 +76,7 @@ tokenize(token_list_t* const out, const char* str, const char* delim) {
 }
 
 int 
-ntokenize(token_list_t* const out, const char* str, uint32_t n, const char* delim) {
+ntokenize(token_list_t* const out, const char* str, unsigned int n, const char* delim) {
 	int code = SUCCESS;
 	token_node_t* p = out->head;
 	token_node_t* q = NULL;

@@ -7,7 +7,7 @@
 
 mtl_t mtl_create(void) {
     mtl_t material = {
-        .name = NULL,
+        .name = { 0 },
         .ambient = {0.0f, 0.0f, 0.0f},
         .diffuse = {0.0f, 0.0f, 0.0f},
         .specular = {0.0f, 0.0f, 0.0f},
@@ -17,43 +17,44 @@ mtl_t mtl_create(void) {
         .specular_exponent = 0,
         .sharpness = 0,
         .optical_density = 0,
-		.map_Ka = {.filename = NULL, .blendu = 0, .blendv = 0, .cc = 0, 
+		.map_Ka = {.filename = { 0 }, .blendu = 0, .blendv = 0, .cc = 0, 
 			.clamp = 0, .mm = {.base = 0.0f, .gain = 0.0f}, 
 			.offset = {0.0f, 0.0f, 0.0f}, .scale = {0.0f, 0.0f, 0.0f}, 
 			.turbulence = {0.0f, 0.0f, 0.0f}, .texres = {.w = 0, .h = 0}
 		},
-		.map_Kd = {.filename = NULL, .blendu = 0, .blendv = 0, .cc = 0, 
+		.map_Kd = {.filename = { 0 }, .blendu = 0, .blendv = 0, .cc = 0, 
 			.clamp = 0, .mm = {.base = 0.0f, .gain = 0.0f}, 
 			.offset = {0.0f, 0.0f, 0.0f}, .scale = {0.0f, 0.0f, 0.0f}, 
 			.turbulence = {0.0f, 0.0f, 0.0f}, .texres = {.w = 0, .h = 0}
 		},
-		.map_Ks = {.filename = NULL, .blendu = 0, .blendv = 0, .cc = 0, 
+		.map_Ks = {.filename = { 0 }, .blendu = 0, .blendv = 0, .cc = 0, 
 			.clamp = 0, .mm = {.base = 0.0f, .gain = 0.0f}, 
 			.offset = {0.0f, 0.0f, 0.0f}, .scale = {0.0f, 0.0f, 0.0f}, 
 			.turbulence = {0.0f, 0.0f, 0.0f}, .texres = {.w = 0, .h = 0}
 		},
-		.map_Ns = {.filename = NULL, .blendu = 0, .blendv = 0, .clamp = 0, 
-			.imfchan = (imfchan_t) l, .mm = {.base = 0.0f, .gain = 0.0f}, 
+		.map_Ns = {.filename = { 0 }, .blendu = 0, .blendv = 0, .clamp = 0, 
+			.imfchan = imfchan_l, .mm = {.base = 0.0f, .gain = 0.0f}, 
 			.offset = {0.0f, 0.0f, 0.0f}, .scale = {0.0f, 0.0f, 0.0f}, 
 			.turbulence = {0.0f, 0.0f, 0.0f}, .texres = {.w = 0, .h = 0}
 		},
-		.map_d = {.filename = NULL, .blendu = 0, .blendv = 0, .clamp = 0, 
-			.imfchan = (imfchan_t) l, .mm = {.base = 0.0f, .gain = 0.0f}, 
+		.map_d = {.filename = { 0 }, .blendu = 0, .blendv = 0, .clamp = 0, 
+			.imfchan = imfchan_l, .mm = {.base = 0.0f, .gain = 0.0f}, 
 			.offset = {0.0f, 0.0f, 0.0f}, .scale = {0.0f, 0.0f, 0.0f}, 
 			.turbulence = {0.0f, 0.0f, 0.0f}, .texres = {.w = 0, .h = 0}
 		},
-		.decal = {.filename = NULL, .blendu = 0, .blendv = 0, .clamp = 0, 
-			.imfchan = (imfchan_t) l, .mm = {.base = 0.0f, .gain = 0.0f}, 
+		.map_aat = 0,
+		.decal = {.filename = { 0 }, .blendu = 0, .blendv = 0, .clamp = 0, 
+			.imfchan = imfchan_l, .mm = {.base = 0.0f, .gain = 0.0f}, 
 			.offset = {0.0f, 0.0f, 0.0f}, .scale = {0.0f, 0.0f, 0.0f}, 
 			.turbulence = {0.0f, 0.0f, 0.0f}, .texres = {.w = 0, .h = 0}
 		},
-		.disp = {.filename = NULL, .blendu = 0, .blendv = 0, .clamp = 0, 
-			.imfchan = (imfchan_t) l, .mm = {.base = 0.0f, .gain = 0.0f}, 
+		.disp = {.filename = { 0 }, .blendu = 0, .blendv = 0, .clamp = 0, 
+			.imfchan = imfchan_l, .mm = {.base = 0.0f, .gain = 0.0f}, 
 			.offset = {0.0f, 0.0f, 0.0f}, .scale = {0.0f, 0.0f, 0.0f}, 
 			.turbulence = {0.0f, 0.0f, 0.0f}, .texres = {.w = 0, .h = 0}
 		},
-		.bump = {.filename = NULL, .bm = 0.0f, .blendu = 0, .blendv = 0, 
-			.clamp = 0, .imfchan = (imfchan_t) l, .mm = {.base = 0.0f, 
+		.bump = {.filename = { 0 }, .bm = 0.0f, .blendu = 0, .blendv = 0, 
+			.clamp = 0, .imfchan = imfchan_l, .mm = {.base = 0.0f, 
 				.gain = 0.0f}, 
 			.offset = {0.0f, 0.0f, 0.0f}, .scale = {0.0f, 0.0f, 0.0f}, 
 			.turbulence = {0.0f, 0.0f, 0.0f}, .texres = {.w = 0, .h = 0}
@@ -64,7 +65,64 @@ mtl_t mtl_create(void) {
 }
 
 void mtl_destroy(mtl_t* material) {
-	free((void*)material->name);
+	// set everything to zero again
+	// all names are stack strings, so they can just be zero'd
+	*material = (mtl_t) {
+        .name = { 0 },
+        .ambient = {0.0f, 0.0f, 0.0f},
+        .diffuse = {0.0f, 0.0f, 0.0f},
+        .specular = {0.0f, 0.0f, 0.0f},
+        .tm_filter = {0.0f, 0.0f, 0.0f},
+        .illum = 0,
+        .dissolve = {.value = 0, .halo = 0},
+        .specular_exponent = 0,
+        .sharpness = 0,
+        .optical_density = 0,
+		.map_Ka = {.filename = { 0 }, .blendu = 0, .blendv = 0, .cc = 0, 
+			.clamp = 0, .mm = {.base = 0.0f, .gain = 0.0f}, 
+			.offset = {0.0f, 0.0f, 0.0f}, .scale = {0.0f, 0.0f, 0.0f}, 
+			.turbulence = {0.0f, 0.0f, 0.0f}, .texres = {.w = 0, .h = 0}
+		},
+		.map_Kd = {.filename = { 0 }, .blendu = 0, .blendv = 0, .cc = 0, 
+			.clamp = 0, .mm = {.base = 0.0f, .gain = 0.0f}, 
+			.offset = {0.0f, 0.0f, 0.0f}, .scale = {0.0f, 0.0f, 0.0f}, 
+			.turbulence = {0.0f, 0.0f, 0.0f}, .texres = {.w = 0, .h = 0}
+		},
+		.map_Ks = {.filename = { 0 }, .blendu = 0, .blendv = 0, .cc = 0, 
+			.clamp = 0, .mm = {.base = 0.0f, .gain = 0.0f}, 
+			.offset = {0.0f, 0.0f, 0.0f}, .scale = {0.0f, 0.0f, 0.0f}, 
+			.turbulence = {0.0f, 0.0f, 0.0f}, .texres = {.w = 0, .h = 0}
+		},
+		.map_Ns = {.filename = { 0 }, .blendu = 0, .blendv = 0, .clamp = 0, 
+			.imfchan = imfchan_l, .mm = {.base = 0.0f, .gain = 0.0f}, 
+			.offset = {0.0f, 0.0f, 0.0f}, .scale = {0.0f, 0.0f, 0.0f}, 
+			.turbulence = {0.0f, 0.0f, 0.0f}, .texres = {.w = 0, .h = 0}
+		},
+		.map_d = {.filename = { 0 }, .blendu = 0, .blendv = 0, .clamp = 0, 
+			.imfchan = imfchan_l, .mm = {.base = 0.0f, .gain = 0.0f}, 
+			.offset = {0.0f, 0.0f, 0.0f}, .scale = {0.0f, 0.0f, 0.0f}, 
+			.turbulence = {0.0f, 0.0f, 0.0f}, .texres = {.w = 0, .h = 0}
+		},
+		.map_aat = 0,
+		.decal = {.filename = { 0 }, .blendu = 0, .blendv = 0, .clamp = 0, 
+			.imfchan = imfchan_l, .mm = {.base = 0.0f, .gain = 0.0f}, 
+			.offset = {0.0f, 0.0f, 0.0f}, .scale = {0.0f, 0.0f, 0.0f}, 
+			.turbulence = {0.0f, 0.0f, 0.0f}, .texres = {.w = 0, .h = 0}
+		},
+		.disp = {.filename = { 0 }, .blendu = 0, .blendv = 0, .clamp = 0, 
+			.imfchan = imfchan_l, .mm = {.base = 0.0f, .gain = 0.0f}, 
+			.offset = {0.0f, 0.0f, 0.0f}, .scale = {0.0f, 0.0f, 0.0f}, 
+			.turbulence = {0.0f, 0.0f, 0.0f}, .texres = {.w = 0, .h = 0}
+		},
+		.bump = {.filename = { 0 }, .bm = 0.0f, .blendu = 0, .blendv = 0, 
+			.clamp = 0, .imfchan = imfchan_l, .mm = {.base = 0.0f, 
+				.gain = 0.0f}, 
+			.offset = {0.0f, 0.0f, 0.0f}, .scale = {0.0f, 0.0f, 0.0f}, 
+			.turbulence = {0.0f, 0.0f, 0.0f}, .texres = {.w = 0, .h = 0}
+		},
+    };
+	// destroy the map
+	refl_destroy(&material->refl_map);
 }
 
 void mtl_print(mtl_t* mat) {

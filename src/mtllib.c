@@ -1,6 +1,13 @@
 #include "mtllib.h"
 #include "token.h"
 #include <string.h>
+#include <stdio.h>
+
+// -----------------------------------------------------------------------------
+// Static utility functions
+// -----------------------------------------------------------------------------
+
+
 
 // -----------------------------------------------------------------------------
 // Implementation
@@ -45,14 +52,16 @@ void mtllib_fprint(FILE* file, mtllib_t* lib) {
 int mtllib_read(const char* fn, mtllib_t* lib) {
     mtllib_destroy(lib);
     FILE* file = fopen(fn, "r");
-	const char* mtltext; // mtl lib contents
+	char* mtltext; // mtl lib contents
     if (!file) {
         return INVALID_FILE;
     } else {
+		// TODO Potential vulnerability: if the file contains a NUL character somewhere,
+		// this will throw off the 'mtltext' string, and could open up attacks
 		fseek(file, 0, SEEK_END);
 		long length = ftell(file);
-		fseek(file, 0, SEEK_START);
-		mtlspec = malloc(length + 1);
+		fseek(file, 0, SEEK_SET);
+		mtltext = malloc(length + 1);
 		if (mtltext) {
 			fread(mtltext, 1, length, file);
 			mtltext[length] = '\0'; // fread doesn't null terminate
@@ -62,62 +71,798 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
 	token_list_t cmds;
 	tokenize(&cmds, mtltext, "\n");
 	token_node_t* pcmd = cmds.head;
+	// the current material to build
+	mtl_t curr_mat = mtl_create();
 	while (pcmd) {
 		token_list_t vars;
-		pvar = vars.head;
 		// get list of parameters to this command
-		ntokenize(&vars, buffer_start(pcmd->buf), pcmd->buf->length, " ");
+		ntokenize(&vars, buffer_start(pcmd->buf), pcmd->buf.length, " ");
 		// copy cmd to string
 		const char cmd[256] = { 0 };
-		strncpy(cmd, buffer_start(vars.head->buf), vars.head->length);
+		strncpy(cmd, buffer_start(vars.head->buf), vars.head->buf.length);
 		// switch on cmd type
+		token_node_t* pvar = vars.head;
 		if (strequ(cmd, "newmtl")) {
-			
+			curr_mat = mtl_create();
+			if (!pvar) {
+				// Name not provided
+				return PARSING_FAILURE;
+			}
+			// Keep copying a name until its done
+			while (pvar) {
+				strncpy(&curr_mat.name, buffer_start(pvar->buf), pvar->buf.length);
+				pvar = pvar->next;
+			}
+		} else if (strequ(cmd, "Ka")) {
+			if (!pvar) {
+				// Parameters not provided
+				return PARSING_FAILURE;
+			}
+			// Get the values
+			buffer_get_float(&pvar->buf, &curr_mat.ambient[0]);
+			pvar = pvar->next;
+			buffer_get_float(&pvar->buf, &curr_mat.ambient[1]);
+			pvar = pvar->next;
+			buffer_get_float(&pvar->buf, &curr_mat.ambient[2]);
+		} else if (strequ(cmd, "Kd")) {
+			if (!pvar) {
+				// Parameters not provided
+				return PARSING_FAILURE;
+			}
+			// Get the values
+			buffer_get_float(&pvar->buf, &curr_mat.diffuse[0]);
+			pvar = pvar->next;
+			buffer_get_float(&pvar->buf, &curr_mat.diffuse[1]);
+			pvar = pvar->next;
+			buffer_get_float(&pvar->buf, &curr_mat.diffuse[2]);
+		} else if (strequ(cmd, "Ks")) {
+			if (!pvar) {
+				// Parameters not provided
+				return PARSING_FAILURE;
+			}
+			// Get the values
+			buffer_get_float(&pvar->buf, &curr_mat.specular[0]);
+			pvar = pvar->next;
+			buffer_get_float(&pvar->buf, &curr_mat.specular[1]);
+			pvar = pvar->next;
+			buffer_get_float(&pvar->buf, &curr_mat.specular[2]);
+		} else if (strequ(cmd, "Tf")) {
+			if (!pvar) {
+				// Parameters not provided
+				return PARSING_FAILURE;
+			}
+			// Get the values
+			buffer_get_float(&pvar->buf, &curr_mat.tm_filter[0]);
+			pvar = pvar->next;
+			buffer_get_float(&pvar->buf, &curr_mat.tm_filter[1]);
+			pvar = pvar->next;
+			buffer_get_float(&pvar->buf, &curr_mat.tm_filter[2]);
+		} else if (strequ(cmd, "illum")) {
+			if (!pvar) {
+				// Parameters not provided
+				return PARSING_FAILURE;
+			}
+			// Get the values
+			buffer_get_int(&pvar->buf, &curr_mat.illum);
+		} else if (strequ(cmd, "d")) {
+			if (!pvar) {
+				// Parameters not provided
+				return PARSING_FAILURE;
+			}
+			// Get the values
+			while (pvar) {
+				if (strncmp(buffer_start(pvar->buf), "-halo", pvar->buf.length) == 0) {
+					curr_mat.dissolve.halo = 1;
+				} else {
+					// Must be the factor
+					buffer_get_float(&pvar->buf, &curr_mat.dissolve.value);
+				}
+				pvar = pvar->next;
+			}
+		} else if (strequ(cmd, "Ns")) {
+			if (!pvar) {
+				// Parameters not provided
+				return PARSING_FAILURE;
+			}
+			// Get the values
+			buffer_get_float(&pvar->buf, &curr_mat.specular_exponent);
+		} else if (strequ(cmd, "sharpness")) {
+			if (!pvar) {
+				// Parameters not provided
+				return PARSING_FAILURE;
+			}
+			// Get the values
+			buffer_get_int(&pvar->buf, &curr_mat.sharpness);
+		} else if (strequ(cmd, "Ni")) {
+			if (!pvar) {
+				// Parameters not provided
+				return PARSING_FAILURE;
+			}
+			// Get the values
+			buffer_get_float(&pvar->buf, &curr_mat.optical_density);
+		} else if (strequ(cmd, "map_Ka")) {
+			if (!pvar) {
+				// Parameters not provided
+				return PARSING_FAILURE;
+			}
+			if (buffer_cmp(&pvar->buf, "-blendu")) {
+				pvar = pvar->next;
+				if (buffer_cmp(&pvar->buf, "on")) {
+					curr_mat.map_Ka.blendu = 1;
+				} else if (buffer_cmp(&pvar->buf, "off")) {
+					curr_mat.map_Ka.blendu = 1;
+				}
+			} else if (buffer_cmp(&pvar->buf, "-blendv")) {
+				pvar = pvar->next;
+				if (buffer_cmp(&pvar->buf, "on")) {
+					curr_mat.map_Ka.blendv = 1;
+				} else if (buffer_cmp(&pvar->buf, "off")) {
+					curr_mat.map_Ka.blendv = 1;
+				}
+			} else if (buffer_cmp(&pvar->buf, "-cc")) {
+				pvar = pvar->next;
+				if (buffer_cmp(&pvar->buf, "on")) {
+					curr_mat.map_Ka.cc = 1;
+				} else if (buffer_cmp(&pvar->buf, "off")) {
+					curr_mat.map_Ka.cc = 1;
+				}
+			} else if (buffer_cmp(&pvar->buf, "-clamp")) {
+				pvar = pvar->next;
+				if (buffer_cmp(&pvar->buf, "on")) {
+					curr_mat.map_Ka.clamp = 1;
+				} else if (buffer_cmp(&pvar->buf, "off")) {
+					curr_mat.map_Ka.clamp = 1;
+				}
+			} else if (buffer_cmp(&pvar->buf, "-mm")) {
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_Ka.mm.base);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_Ka.mm.gain);
+			} else if (buffer_cmp(&pvar->buf, "-o")) {
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_Ka.offset[0]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_Ka.offset[1]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_Ka.offset[2]);
+			} else if (buffer_cmp(&pvar->buf, "-s")) {
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_Ka.scale[0]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_Ka.scale[1]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_Ka.scale[2]);
+			} else if (buffer_cmp(&pvar->buf, "-t")) {
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_Ka.turbulence[0]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_Ka.turbulence[1]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_Ka.turbulence[2]);
+			} else if (buffer_cmp(&pvar->buf, "-texres")) {
+				pvar = pvar->next;
+				// width and height should be equivalent.
+				buffer_get_int(&pvar->buf, &curr_mat.map_Ka.texres.w);
+				buffer_get_int(&pvar->buf, &curr_mat.map_Ka.texres.h);
+			} else {
+				// Must be the filename
+				buffer_get_strn(&pvar->buf, &curr_mat.map_Ka.filename, MAX_MATERIAL_OPT_FILENAME);
+			}
+			pvar = pvar->next;
+		} else if (strequ(cmd, "map_Kd")) {
+			if (!pvar) {
+				// Parameters not provided
+				return PARSING_FAILURE;
+			}
+			if (buffer_cmp(&pvar->buf, "-blendu")) {
+				pvar = pvar->next;
+				if (buffer_cmp(&pvar->buf, "on")) {
+					curr_mat.map_Ka.blendu = 1;
+				} else if (buffer_cmp(&pvar->buf, "off")) {
+					curr_mat.map_Ka.blendu = 1;
+				}
+			} else if (buffer_cmp(&pvar->buf, "-blendv")) {
+				pvar = pvar->next;
+				if (buffer_cmp(&pvar->buf, "on")) {
+					curr_mat.map_Ka.blendv = 1;
+				} else if (buffer_cmp(&pvar->buf, "off")) {
+					curr_mat.map_Ka.blendv = 1;
+				}
+			} else if (buffer_cmp(&pvar->buf, "-cc")) {
+				pvar = pvar->next;
+				if (buffer_cmp(&pvar->buf, "on")) {
+					curr_mat.map_Ka.cc = 1;
+				} else if (buffer_cmp(&pvar->buf, "off")) {
+					curr_mat.map_Ka.cc = 1;
+				}
+			} else if (buffer_cmp(&pvar->buf, "-clamp")) {
+				pvar = pvar->next;
+				if (buffer_cmp(&pvar->buf, "on")) {
+					curr_mat.map_Ka.clamp = 1;
+				} else if (buffer_cmp(&pvar->buf, "off")) {
+					curr_mat.map_Ka.clamp = 1;
+				}
+			} else if (buffer_cmp(&pvar->buf, "-mm")) {
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_Ka.mm.base);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_Ka.mm.gain);
+			} else if (buffer_cmp(&pvar->buf, "-o")) {
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_Ka.offset[0]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_Ka.offset[1]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_Ka.offset[2]);
+			} else if (buffer_cmp(&pvar->buf, "-s")) {
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_Ka.scale[0]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_Ka.scale[1]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_Ka.scale[2]);
+			} else if (buffer_cmp(&pvar->buf, "-t")) {
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_Ka.turbulence[0]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_Ka.turbulence[1]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_Ka.turbulence[2]);
+			} else if (buffer_cmp(&pvar->buf, "-texres")) {
+				pvar = pvar->next;
+				// width and height should be equivalent.
+				buffer_get_int(&pvar->buf, &curr_mat.map_Ka.texres.w);
+				buffer_get_int(&pvar->buf, &curr_mat.map_Ka.texres.h);
+			} else {
+				// Must be the filename
+				buffer_get_strn(&pvar->buf, &curr_mat.map_Ka.filename, MAX_MATERIAL_OPT_FILENAME);
+			}
+			pvar = pvar->next;
+		} else if (strequ(cmd, "map_Ks")) {
+			if (!pvar) {
+				// Parameters not provided
+				return PARSING_FAILURE;
+			}
+			if (buffer_cmp(&pvar->buf, "-blendu")) {
+				pvar = pvar->next;
+				if (buffer_cmp(&pvar->buf, "on")) {
+					curr_mat.map_Ks.blendu = 1;
+				} else if (buffer_cmp(&pvar->buf, "off")) {
+					curr_mat.map_Ks.blendu = 1;
+				}
+			} else if (buffer_cmp(&pvar->buf, "-blendv")) {
+				pvar = pvar->next;
+				if (buffer_cmp(&pvar->buf, "on")) {
+					curr_mat.map_Ks.blendv = 1;
+				} else if (buffer_cmp(&pvar->buf, "off")) {
+					curr_mat.map_Ks.blendv = 1;
+				}
+			} else if (buffer_cmp(&pvar->buf, "-cc")) {
+				pvar = pvar->next;
+				if (buffer_cmp(&pvar->buf, "on")) {
+					curr_mat.map_Ks.cc = 1;
+				} else if (buffer_cmp(&pvar->buf, "off")) {
+					curr_mat.map_Ks.cc = 1;
+				}
+			} else if (buffer_cmp(&pvar->buf, "-clamp")) {
+				pvar = pvar->next;
+				if (buffer_cmp(&pvar->buf, "on")) {
+					curr_mat.map_Ks.clamp = 1;
+				} else if (buffer_cmp(&pvar->buf, "off")) {
+					curr_mat.map_Ks.clamp = 1;
+				}
+			} else if (buffer_cmp(&pvar->buf, "-mm")) {
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_Ks.mm.base);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_Ks.mm.gain);
+			} else if (buffer_cmp(&pvar->buf, "-o")) {
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_Ks.offset[0]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_Ks.offset[1]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_Ks.offset[2]);
+			} else if (buffer_cmp(&pvar->buf, "-s")) {
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_Ks.scale[0]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_Ks.scale[1]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_Ks.scale[2]);
+			} else if (buffer_cmp(&pvar->buf, "-t")) {
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_Ks.turbulence[0]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_Ks.turbulence[1]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_Ks.turbulence[2]);
+			} else if (buffer_cmp(&pvar->buf, "-texres")) {
+				pvar = pvar->next;
+				// width and height should be equivalent.
+				buffer_get_int(&pvar->buf, &curr_mat.map_Ks.texres.w);
+				buffer_get_int(&pvar->buf, &curr_mat.map_Ks.texres.h);
+			} else {
+				// Must be the filename
+				buffer_get_strn(&pvar->buf, &curr_mat.map_Ks.filename, MAX_MATERIAL_OPT_FILENAME);
+			}
+			pvar = pvar->next;
+		} else if (strequ(cmd, "map_Ns")) {
+			if (!pvar) {
+				// Parameters not provided
+				return PARSING_FAILURE;
+			}
+			if (buffer_cmp(&pvar->buf, "-blendu")) {
+				pvar = pvar->next;
+				if (buffer_cmp(&pvar->buf, "on")) {
+					curr_mat.map_Ns.blendu = 1;
+				} else if (buffer_cmp(&pvar->buf, "off")) {
+					curr_mat.map_Ns.blendu = 1;
+				}
+			} else if (buffer_cmp(&pvar->buf, "-blendv")) {
+				pvar = pvar->next;
+				if (buffer_cmp(&pvar->buf, "on")) {
+					curr_mat.map_Ns.blendv = 1;
+				} else if (buffer_cmp(&pvar->buf, "off")) {
+					curr_mat.map_Ns.blendv = 1;
+				}
+			} else if (buffer_cmp(&pvar->buf, "-clamp")) {
+				pvar = pvar->next;
+				if (buffer_cmp(&pvar->buf, "on")) {
+					curr_mat.map_Ns.clamp = 1;
+				} else if (buffer_cmp(&pvar->buf, "off")) {
+					curr_mat.map_Ns.clamp = 1;
+				}
+			} else if (buffer_cmp(&pvar->buf, "-mm")) {
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_Ns.mm.base);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_Ns.mm.gain);
+			} else if (buffer_cmp(&pvar->buf, "-o")) {
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_Ns.offset[0]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_Ns.offset[1]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_Ns.offset[2]);
+			} else if (buffer_cmp(&pvar->buf, "-s")) {
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_Ns.scale[0]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_Ns.scale[1]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_Ns.scale[2]);
+			} else if (buffer_cmp(&pvar->buf, "-t")) {
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_Ns.turbulence[0]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_Ns.turbulence[1]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_Ns.turbulence[2]);
+			} else if (buffer_cmp(&pvar->buf, "-texres")) {
+				pvar = pvar->next;
+				// width and height should be equivalent.
+				buffer_get_int(&pvar->buf, &curr_mat.map_Ns.texres.w);
+				buffer_get_int(&pvar->buf, &curr_mat.map_Ns.texres.h);
+			} else if (buffer_cmp(&pvar->buf, "-imfchan")) {
+				pvar = pvar->next;
+				if (buffer_cmp(&pvar->buf, "r")) {
+					curr_mat.map_Ns.imfchan = imfchan_r;
+				} else if (buffer_cmp(&pvar->buf, "g")) {
+					curr_mat.map_Ns.imfchan = imfchan_g;
+				} else if (buffer_cmp(&pvar->buf, "b")) {
+					curr_mat.map_Ns.imfchan = imfchan_b;
+				} else if (buffer_cmp(&pvar->buf, "m")) {
+					curr_mat.map_Ns.imfchan = imfchan_m;
+				} else if (buffer_cmp(&pvar->buf, "l")) {
+					curr_mat.map_Ns.imfchan = imfchan_l;
+				} else if (buffer_cmp(&pvar->buf, "z")) {
+					curr_mat.map_Ns.imfchan = imfchan_z;
+				}
+			} else {
+				// Must be the filename
+				buffer_get_strn(&pvar->buf, &curr_mat.map_Ns.filename, MAX_MATERIAL_OPT_FILENAME);
+			}
+			pvar = pvar->next;
+		} else if (strequ(cmd, "map_d")) {
+			if (!pvar) {
+				// Parameters not provided
+				return PARSING_FAILURE;
+			}
+			if (buffer_cmp(&pvar->buf, "-blendu")) {
+				pvar = pvar->next;
+				if (buffer_cmp(&pvar->buf, "on")) {
+					curr_mat.map_d.blendu = 1;
+				} else if (buffer_cmp(&pvar->buf, "off")) {
+					curr_mat.map_d.blendu = 1;
+				}
+			} else if (buffer_cmp(&pvar->buf, "-blendv")) {
+				pvar = pvar->next;
+				if (buffer_cmp(&pvar->buf, "on")) {
+					curr_mat.map_d.blendv = 1;
+				} else if (buffer_cmp(&pvar->buf, "off")) {
+					curr_mat.map_d.blendv = 1;
+				}
+			} else if (buffer_cmp(&pvar->buf, "-clamp")) {
+				pvar = pvar->next;
+				if (buffer_cmp(&pvar->buf, "on")) {
+					curr_mat.map_d.clamp = 1;
+				} else if (buffer_cmp(&pvar->buf, "off")) {
+					curr_mat.map_d.clamp = 1;
+				}
+			} else if (buffer_cmp(&pvar->buf, "-mm")) {
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_d.mm.base);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_d.mm.gain);
+			} else if (buffer_cmp(&pvar->buf, "-o")) {
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_d.offset[0]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_d.offset[1]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_d.offset[2]);
+			} else if (buffer_cmp(&pvar->buf, "-s")) {
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_d.scale[0]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_d.scale[1]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_d.scale[2]);
+			} else if (buffer_cmp(&pvar->buf, "-t")) {
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_d.turbulence[0]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_d.turbulence[1]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.map_d.turbulence[2]);
+			} else if (buffer_cmp(&pvar->buf, "-texres")) {
+				pvar = pvar->next;
+				// width and height should be equivalent.
+				buffer_get_int(&pvar->buf, &curr_mat.map_d.texres.w);
+				buffer_get_int(&pvar->buf, &curr_mat.map_d.texres.h);
+			} else if (buffer_cmp(&pvar->buf, "-imfchan")) {
+				pvar = pvar->next;
+				if (buffer_cmp(&pvar->buf, "r")) {
+					curr_mat.map_d.imfchan = imfchan_r;
+				} else if (buffer_cmp(&pvar->buf, "g")) {
+					curr_mat.map_d.imfchan = imfchan_g;
+				} else if (buffer_cmp(&pvar->buf, "b")) {
+					curr_mat.map_d.imfchan = imfchan_b;
+				} else if (buffer_cmp(&pvar->buf, "m")) {
+					curr_mat.map_d.imfchan = imfchan_m;
+				} else if (buffer_cmp(&pvar->buf, "l")) {
+					curr_mat.map_d.imfchan = imfchan_l;
+				} else if (buffer_cmp(&pvar->buf, "z")) {
+					curr_mat.map_d.imfchan = imfchan_z;
+				}
+			} else {
+				// Must be the filename
+				buffer_get_strn(&pvar->buf, &curr_mat.map_d.filename, MAX_MATERIAL_OPT_FILENAME);
+			}
+			pvar = pvar->next;
+		} else if (strequ(cmd, "map_aat")) {
+			if (!pvar) {
+				// Parameters not provided
+				return PARSING_FAILURE;
+			}
+			if (buffer_cmp(&pvar->buf, "on")) {
+				curr_mat.map_aat = 1;
+			}
+			pvar = pvar->next;
+		} else if (strequ(cmd, "decal")) {
+			if (!pvar) {
+				// Parameters not provided
+				return PARSING_FAILURE;
+			}
+			if (buffer_cmp(&pvar->buf, "-blendu")) {
+				pvar = pvar->next;
+				if (buffer_cmp(&pvar->buf, "on")) {
+					curr_mat.decal.blendu = 1;
+				} else if (buffer_cmp(&pvar->buf, "off")) {
+					curr_mat.decal.blendu = 1;
+				}
+			} else if (buffer_cmp(&pvar->buf, "-blendv")) {
+				pvar = pvar->next;
+				if (buffer_cmp(&pvar->buf, "on")) {
+					curr_mat.decal.blendv = 1;
+				} else if (buffer_cmp(&pvar->buf, "off")) {
+					curr_mat.decal.blendv = 1;
+				}
+			} else if (buffer_cmp(&pvar->buf, "-clamp")) {
+				pvar = pvar->next;
+				if (buffer_cmp(&pvar->buf, "on")) {
+					curr_mat.decal.clamp = 1;
+				} else if (buffer_cmp(&pvar->buf, "off")) {
+					curr_mat.decal.clamp = 1;
+				}
+			} else if (buffer_cmp(&pvar->buf, "-mm")) {
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.decal.mm.base);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.decal.mm.gain);
+			} else if (buffer_cmp(&pvar->buf, "-o")) {
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.decal.offset[0]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.decal.offset[1]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.decal.offset[2]);
+			} else if (buffer_cmp(&pvar->buf, "-s")) {
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.decal.scale[0]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.decal.scale[1]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.decal.scale[2]);
+			} else if (buffer_cmp(&pvar->buf, "-t")) {
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.decal.turbulence[0]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.decal.turbulence[1]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.decal.turbulence[2]);
+			} else if (buffer_cmp(&pvar->buf, "-texres")) {
+				pvar = pvar->next;
+				// width and height should be equivalent.
+				buffer_get_int(&pvar->buf, &curr_mat.decal.texres.w);
+				buffer_get_int(&pvar->buf, &curr_mat.decal.texres.h);
+			} else if (buffer_cmp(&pvar->buf, "-imfchan")) {
+				pvar = pvar->next;
+				if (buffer_cmp(&pvar->buf, "r")) {
+					curr_mat.decal.imfchan = imfchan_r;
+				} else if (buffer_cmp(&pvar->buf, "g")) {
+					curr_mat.decal.imfchan = imfchan_g;
+				} else if (buffer_cmp(&pvar->buf, "b")) {
+					curr_mat.decal.imfchan = imfchan_b;
+				} else if (buffer_cmp(&pvar->buf, "m")) {
+					curr_mat.decal.imfchan = imfchan_m;
+				} else if (buffer_cmp(&pvar->buf, "l")) {
+					curr_mat.decal.imfchan = imfchan_l;
+				} else if (buffer_cmp(&pvar->buf, "z")) {
+					curr_mat.decal.imfchan = imfchan_z;
+				}
+			} else {
+				// Must be the filename
+				buffer_get_strn(&pvar->buf, &curr_mat.decal.filename, MAX_MATERIAL_OPT_FILENAME);
+			}
+			pvar = pvar->next;
+		} else if (strequ(cmd, "disp")) {
+			if (!pvar) {
+				// Parameters not provided
+				return PARSING_FAILURE;
+			}
+			if (buffer_cmp(&pvar->buf, "-blendu")) {
+				pvar = pvar->next;
+				if (buffer_cmp(&pvar->buf, "on")) {
+					curr_mat.disp.blendu = 1;
+				} else if (buffer_cmp(&pvar->buf, "off")) {
+					curr_mat.disp.blendu = 1;
+				}
+			} else if (buffer_cmp(&pvar->buf, "-blendv")) {
+				pvar = pvar->next;
+				if (buffer_cmp(&pvar->buf, "on")) {
+					curr_mat.disp.blendv = 1;
+				} else if (buffer_cmp(&pvar->buf, "off")) {
+					curr_mat.disp.blendv = 1;
+				}
+			} else if (buffer_cmp(&pvar->buf, "-clamp")) {
+				pvar = pvar->next;
+				if (buffer_cmp(&pvar->buf, "on")) {
+					curr_mat.disp.clamp = 1;
+				} else if (buffer_cmp(&pvar->buf, "off")) {
+					curr_mat.disp.clamp = 1;
+				}
+			} else if (buffer_cmp(&pvar->buf, "-mm")) {
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.disp.mm.base);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.disp.mm.gain);
+			} else if (buffer_cmp(&pvar->buf, "-o")) {
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.disp.offset[0]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.disp.offset[1]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.disp.offset[2]);
+			} else if (buffer_cmp(&pvar->buf, "-s")) {
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.disp.scale[0]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.disp.scale[1]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.disp.scale[2]);
+			} else if (buffer_cmp(&pvar->buf, "-t")) {
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.disp.turbulence[0]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.disp.turbulence[1]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.disp.turbulence[2]);
+			} else if (buffer_cmp(&pvar->buf, "-texres")) {
+				pvar = pvar->next;
+				// width and height should be equivalent.
+				buffer_get_int(&pvar->buf, &curr_mat.disp.texres.w);
+				buffer_get_int(&pvar->buf, &curr_mat.disp.texres.h);
+			} else if (buffer_cmp(&pvar->buf, "-imfchan")) {
+				pvar = pvar->next;
+				if (buffer_cmp(&pvar->buf, "r")) {
+					curr_mat.disp.imfchan = imfchan_r;
+				} else if (buffer_cmp(&pvar->buf, "g")) {
+					curr_mat.disp.imfchan = imfchan_g;
+				} else if (buffer_cmp(&pvar->buf, "b")) {
+					curr_mat.disp.imfchan = imfchan_b;
+				} else if (buffer_cmp(&pvar->buf, "m")) {
+					curr_mat.disp.imfchan = imfchan_m;
+				} else if (buffer_cmp(&pvar->buf, "l")) {
+					curr_mat.disp.imfchan = imfchan_l;
+				} else if (buffer_cmp(&pvar->buf, "z")) {
+					curr_mat.disp.imfchan = imfchan_z;
+				}
+			} else {
+				// Must be the filename
+				buffer_get_strn(&pvar->buf, &curr_mat.disp.filename, MAX_MATERIAL_OPT_FILENAME);
+			}
+		} else if (strequ(cmd, "bump")) {
+			if (!pvar) {
+				// Parameters not provided
+				return PARSING_FAILURE;
+			}
+			if (buffer_cmp(&pvar->buf, "-blendu")) {
+				pvar = pvar->next;
+				if (buffer_cmp(&pvar->buf, "on")) {
+					curr_mat.bump.blendu = 1;
+				} else if (buffer_cmp(&pvar->buf, "off")) {
+					curr_mat.bump.blendu = 1;
+				}
+			} else if (buffer_cmp(&pvar->buf, "-blendv")) {
+				pvar = pvar->next;
+				if (buffer_cmp(&pvar->buf, "on")) {
+					curr_mat.bump.blendv = 1;
+				} else if (buffer_cmp(&pvar->buf, "off")) {
+					curr_mat.bump.blendv = 1;
+				}
+			} else if (buffer_cmp(&pvar->buf, "-clamp")) {
+				pvar = pvar->next;
+				if (buffer_cmp(&pvar->buf, "on")) {
+					curr_mat.bump.clamp = 1;
+				} else if (buffer_cmp(&pvar->buf, "off")) {
+					curr_mat.bump.clamp = 1;
+				}
+			} else if (buffer_cmp(&pvar->buf, "-mm")) {
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.bump.mm.base);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.bump.mm.gain);
+			} else if (buffer_cmp(&pvar->buf, "-o")) {
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.bump.offset[0]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.bump.offset[1]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.bump.offset[2]);
+			} else if (buffer_cmp(&pvar->buf, "-s")) {
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.bump.scale[0]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.bump.scale[1]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.bump.scale[2]);
+			} else if (buffer_cmp(&pvar->buf, "-t")) {
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.bump.turbulence[0]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.bump.turbulence[1]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.bump.turbulence[2]);
+			} else if (buffer_cmp(&pvar->buf, "-texres")) {
+				pvar = pvar->next;
+				// width and height should be equivalent.
+				buffer_get_int(&pvar->buf, &curr_mat.bump.texres.w);
+				buffer_get_int(&pvar->buf, &curr_mat.bump.texres.h);
+			} else if (buffer_cmp(&pvar->buf, "-imfchan")) {
+				pvar = pvar->next;
+				if (buffer_cmp(&pvar->buf, "r")) {
+					curr_mat.bump.imfchan = imfchan_r;
+				} else if (buffer_cmp(&pvar->buf, "g")) {
+					curr_mat.bump.imfchan = imfchan_g;
+				} else if (buffer_cmp(&pvar->buf, "b")) {
+					curr_mat.bump.imfchan = imfchan_b;
+				} else if (buffer_cmp(&pvar->buf, "m")) {
+					curr_mat.bump.imfchan = imfchan_m;
+				} else if (buffer_cmp(&pvar->buf, "l")) {
+					curr_mat.bump.imfchan = imfchan_l;
+				} else if (buffer_cmp(&pvar->buf, "z")) {
+					curr_mat.bump.imfchan = imfchan_z;
+				}
+			} else if (buffer_cmp(&pvar->buf, "-bm")) {
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &curr_mat.bump.bm);
+			} else {
+				// Must be the filename
+				buffer_get_strn(&pvar->buf, &curr_mat.bump.filename, MAX_MATERIAL_OPT_FILENAME);
+			}
+		} else if (strequ(cmd, "refl")) {
+			pvar = pvar->next;
+			refl_t refl;
+			refl_opts_t opts;
+			if (!pvar) {
+				// Parameters not provided
+				return PARSING_FAILURE;
+			}
+			if (buffer_cmp(&pvar->buf, "-blendu")) {
+				pvar = pvar->next;
+				if (buffer_cmp(&pvar->buf, "on")) {
+					opts.blendu = 1;
+				} else if (buffer_cmp(&pvar->buf, "off")) {
+					opts.blendu = 1;
+				}
+			} else if (buffer_cmp(&pvar->buf, "-blendv")) {
+				pvar = pvar->next;
+				if (buffer_cmp(&pvar->buf, "on")) {
+					opts.blendv = 1;
+				} else if (buffer_cmp(&pvar->buf, "off")) {
+					opts.blendv = 1;
+				}
+			}  else if (buffer_cmp(&pvar->buf, "-cc")) {
+				pvar = pvar->next;
+				if (buffer_cmp(&pvar->buf, "on")) {
+					opts.cc = 1;
+				} else if (buffer_cmp(&pvar->buf, "off")) {
+					opts.cc = 1;
+				}
+			} else if (buffer_cmp(&pvar->buf, "-clamp")) {
+				pvar = pvar->next;
+				if (buffer_cmp(&pvar->buf, "on")) {
+					opts.clamp = 1;
+				} else if (buffer_cmp(&pvar->buf, "off")) {
+					opts.clamp = 1;
+				}
+			} else if (buffer_cmp(&pvar->buf, "-mm")) {
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &opts.mm.base);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &opts.mm.gain);
+			} else if (buffer_cmp(&pvar->buf, "-o")) {
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &opts.offset[0]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &opts.offset[1]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &opts.offset[2]);
+			} else if (buffer_cmp(&pvar->buf, "-s")) {
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &opts.scale[0]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &opts.scale[1]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &opts.scale[2]);
+			} else if (buffer_cmp(&pvar->buf, "-t")) {
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &opts.turbulence[0]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &opts.turbulence[1]);
+				pvar = pvar->next;
+				buffer_get_float(&pvar->buf, &opts.turbulence[2]);
+			} else if (buffer_cmp(&pvar->buf, "-texres")) {
+				pvar = pvar->next;
+				// width and height should be equivalent.
+				buffer_get_int(&pvar->buf, &opts.texres.w);
+				buffer_get_int(&pvar->buf, &opts.texres.h);
+			}
+			if (curr_mat.refl_map.head != NULL) {
+				refl_append(&curr_mat.refl_map, opts);
+			} else {
+				refl_create(&curr_mat.refl_map, opts);
+			}
+		} else {
+			// Unsupported command detected
+			return PARSING_FAILURE;
 		}
 		// Go to the next command
 		pcmd = pcmd->next;
 	}
 	free(mtltext);
-	
-    #define init_3f(buf) buffer_init(line_buffer, buf, 3, TYPE_FLOAT)
-    #define init_1u(buf) buffer_init(line_buffer, buf, 1, TYPE_UINT);
-    #define init_1f(buf) buffer_init(line_buffer, buf, 1, TYPE_FLOAT);
-    char line_buffer[MAX_LINE_LEN];
-    while (fgets(line_buffer, sizeof line_buffer, file)) {
-        const char* type = strtok(line_buffer, " ");
-        mtl_t* curr_mat = NULL;
-        // TODO: bounds checks on certain values
-        if (strequ(type, "newmtl")) {
-			char* name = strtok(line_buffer, NULL);
-			mtl_t new_mat = mtl_create();
-			if (!map_insert(&lib->map, name, new_mat)) {
-				return MEMORY_REFUSED;
-			}
-			map_at(&lib->map, name, curr_mat);
-        } else if (strequ(type, "Ka")) {
-            init_3f(curr_mat->ambient);
-        } else if (strequ(type, "Kd")) {
-            init_3f(curr_mat->diffuse);
-        } else if (strequ(type, "Ks")) {
-            init_3f(curr_mat->specular);
-        } else if (strequ(type, "Tf")) {
-            init_3f(curr_mat->tm_filter);
-        } else if (strequ(type, "illum")) {
-            init_1u(&curr_mat->illum);
-        } else if(strequ(type, "d")) {
-            // TODO: support -halo
-            init_1f(&curr_mat->dissolve);
-        } else if (strequ(type, "Ns")) {
-            init_1u(&curr_mat->specular_exponent);
-        } else if (strequ(type, "sharpness")) {
-            init_1u(&curr_mat->sharpness);
-        } else if(strequ(type, "Ni")) {
-            init_1f(&curr_mat->optical_density);
-        }
-    }
-    #undef init_3f
-    #undef init_1u
-    #undef init_1f
 
     return SUCCESS;
 }

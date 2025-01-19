@@ -10,8 +10,10 @@
 
 #include <stdint.h>
 
+#define MAX_MATERIAL_OPT_FILENAME 255
+
 /** The filename for the texture or image. */
-typedef const char*							filename_t;
+typedef const char 							filename_t[MAX_MATERIAL_OPT_FILENAME];
 /** Turns texture blending in the horizontal direction on or off. Default is 1 
  * (on). */
 typedef int 								blendu_t;
@@ -21,7 +23,8 @@ typedef int									blendv_t;
 /** Specifies a bump multiplier and can only be used with the 'bump' 
  * statement. */
 typedef float								bm_t;
-/** Increases the sharpness or calirty of mip-mapped texture files. */
+/** Increases the sharpness or clarity of mip-mapped texture files.
+ * Currently unused since the specs do not clarify where it is used. */
 typedef float								boost_t;
 /** Enables color correction. Default if 0 (off). */
 typedef int									cc_t;
@@ -30,7 +33,8 @@ typedef int									cc_t;
 typedef int									clamp_t;
 /* @enum imfchan_t
  * @brief Specifies the channel used to create scalar or bump texture. */
-typedef enum { r, g, b, m, l, z }			imfchan_t;
+typedef enum { imfchan_r, imfchan_g, imfchan_b, 
+	imfchan_m, imfchan_l, imfchan_z }		imfchan_t;
 /** @struct mm_t
  * @brief Specifies the range over which scalar or color textures may vary. */
 typedef struct { float base; float gain; }	mm_t;
@@ -52,9 +56,9 @@ typedef struct { uint32_t w; uint32_t h; }	texres_t;
 /** Enables or disables anti-aliasing of textures in this material.*/
 typedef int 								map_aat_t;
 /** Specifies the type of the reflection map.*/
-typedef enum { sphere, cube_top, 		
-			cube_front, cube_back,
-			cube_left, cube_right }			refl_type_t;
+typedef enum { refl_sphere, refl_cube_top, 		
+			refl_cube_front, refl_cube_back,
+			refl_cube_left, refl_cube_right }	refl_type_t;
 
 /** @struct map_Ka_t
  * @brief Ambient reflectivity mapping options.

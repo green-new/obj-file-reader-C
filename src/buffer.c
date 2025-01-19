@@ -2,16 +2,17 @@
 #include "defs.h"
 #include <stdlib.h>
 
+#define MAX_TEMP_SIZE 64
+
 int
 buffer_get_float(buffer_t* src, float* dest) {
-	#define N 64
-	if (src->length > N) {
+	if (src->length > MAX_TEMP_SIZE) {
 		return PARSING_FAILURE; // Not enough characters
 	}
-	char numstr[N] = {0};
+	char numstr[MAX_TEMP_SIZE] = {0};
 	unsigned int i = 0;
-	for (; i < N; i++) {
-		switch (buffer_start(src)[i]) {
+	for (; i < MAX_TEMP_SIZE; i++) {
+		switch (buffer_start(*src)[i]) {
 			case '0':
 			case '1':
 			case '2':
@@ -26,7 +27,7 @@ buffer_get_float(buffer_t* src, float* dest) {
 			case '-':
 			case 'e':
 			case 'E':
-				numstr[i] = buffer_start(src)[i];
+				numstr[i] = buffer_start(*src)[i];
 				break;
 			case '.':
 			case ',':
@@ -44,19 +45,17 @@ loop_exit: ;
 	if (*errptr != '\0') {
 		return PARSING_FAILURE;
 	}
-	#undef N
 	return SUCCESS;
 }
 int 
 buffer_get_int(buffer_t* src, int* dest) {
-	#define N 64
-	if (src->length > N) {
+	if (src->length > MAX_TEMP_SIZE) {
 		return 1; // Not enough characters
 	}
-	char numstr[N] = {0};
+	char numstr[MAX_TEMP_SIZE] = {0};
 	unsigned int i = 0;
-	for (; i < N; i++) {
-		switch (buffer_start(src)[i]) {
+	for (; i < MAX_TEMP_SIZE; i++) {
+		switch (buffer_start(*src)[i]) {
 			case '0':
 			case '1':
 			case '2':
@@ -71,7 +70,7 @@ buffer_get_int(buffer_t* src, int* dest) {
 			case '-':
 			case 'e':
 			case 'E':
-				numstr[i] = buffer_start(src)[i];
+				numstr[i] = buffer_start(*src)[i];
 				break;
 			case '.':
 			case ',':
@@ -91,9 +90,18 @@ loop_exit: ;
 	}
 	return SUCCESS;
 }
-int buffer_get_str(buffer_t* src, char* dest, unsigned int n) {
-	for (unsigned int i = 0; i < n && i < src->length; i++) {
-		dest[i] = buffer_at(src, i);
+int buffer_get_strn(buffer_t* restrict src, char* restrict dest, unsigned int n) {
+	for (unsigned int i = 0; i < n; i++) {
+		dest[i] = buffer_at(*src, i);
 	}
 	return SUCCESS;
+}
+int buffer_get_str(buffer_t* restrict src, char* restrict dest) {
+	for (unsigned int i = 0; i < src->length; i++) {
+		dest[i] = buffer_at(*src, i);
+	}
+	return SUCCESS;
+}
+int buffer_cmp(buffer_t* restrict src, char* restrict str) {
+	return strncmp(buffer_start(*src), str, src->length) == 0;
 }
