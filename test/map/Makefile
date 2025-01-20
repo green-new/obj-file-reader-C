@@ -1,7 +1,7 @@
 CC:=gcc
 CFLAGS:=-g -Wall -std=c99 -pedantic -O0
 LDIR=-L./../../bin
-LDLIBS:=-lmtlobj
+LDLIBS:=-lcmtlobj
 # 'include' is 2 dirs back
 LDFLAGS:=-I./../../include
 

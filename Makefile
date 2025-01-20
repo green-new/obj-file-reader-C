@@ -10,7 +10,7 @@ SRCD:=src
 SRCS:=$(wildcard ${SRCD}/*.c)
 OBJS:=$(subst .c,.o,$(subst ${SRCD},${OBJD},${SRCS}))
 
-OUTPUT:=libmtlobj.a
+OUTPUT:=libcmtlobj.a
 OUTPUT:=$(addprefix ${BIND}/,${OUTPUT})
 
 # list of test modules

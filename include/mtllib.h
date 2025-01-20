@@ -22,11 +22,11 @@ typedef struct {
 // 		mtllib_t.
 // -----------------------------------------------------------------------------
 
-/** @brief Creates a new, empty material library. 
- * @return A material library.
+/** @brief Creates a new, empty material library at the pointer. 
+ * @return [SUCCESS, MEMORY_REFUSED]
  */
-mtllib_t 
-mtllib_create(void);
+int 
+mtllib_create(mtllib_t* lib);
 
 /** @brief Destroys this material library.
  * @param lib The material library.

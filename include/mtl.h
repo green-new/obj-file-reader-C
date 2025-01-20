@@ -29,7 +29,7 @@
  */
 typedef struct mtl_t {
 	/** Name of this material type. The maximum length is 255. */
-    const char name[MAX_MATERIAL_NAME];
+    char name[MAX_MATERIAL_NAME];
 	/** Specifies the ambient reflectivity (Ka) using rgb values 
 	 * scaled from [0, 1]. */
     float ambient[3];
@@ -44,7 +44,7 @@ typedef struct mtl_t {
     float tm_filter[3];
 	/** Specifies the illumination model (illum) to use. Value between 0-10, see 
 	 * complete descriptions in illum.h. */
-    uint32_t illum;
+    unsigned int illum;
 	/** Specifies the "dissolve" (d), or more well known as transparency, of 
 	 * this material. */
 	struct {
@@ -56,9 +56,9 @@ typedef struct mtl_t {
 		int halo;
 	} dissolve;				
 	/** Specifies the specular exponent (Ns) for this material. */
-    uint32_t specular_exponent;
+    unsigned int specular_exponent;
 	/** Specifies the sharpness of reflections (sharprness) of this material. */
-    uint32_t sharpness;
+    unsigned int sharpness;
 	/** Specifies the optical density (Ni) for this material. Also known as 
 	 * "index of refraction". */
     float optical_density;
