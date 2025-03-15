@@ -10,10 +10,10 @@
 
 #include <stdint.h>
 
-#define MAX_MATERIAL_OPT_FILENAME 255
+#define MAX_MATERIAL_OPT_FILENAME (unsigned int)255
 
 /** The filename for the texture or image. */
-typedef const char 							filename_t[MAX_MATERIAL_OPT_FILENAME];
+typedef char 							filename_t[MAX_MATERIAL_OPT_FILENAME];
 /** Turns texture blending in the horizontal direction on or off. Default is 1 
  * (on). */
 typedef int 								blendu_t;
@@ -52,7 +52,7 @@ typedef float								turb_t[3];
  * @brief Specifies the resolution of the texture created when an image is used.
  * The default texture size is the largest power of 2 that does not exceed the
  * original image size. */
-typedef struct { uint32_t w; uint32_t h; }	texres_t;
+typedef struct { unsigned int w; unsigned int h; }	texres_t;
 /** Enables or disables anti-aliasing of textures in this material.*/
 typedef int 								map_aat_t;
 /** Specifies the type of the reflection map.*/

@@ -30,7 +30,7 @@ tokenize(token_list_t* const out,
 int 
 ntokenize(token_list_t* const out,
 	const char* str,
-	uint32_t n,
+	unsigned int n,
 	const char* delim);
 
 void 

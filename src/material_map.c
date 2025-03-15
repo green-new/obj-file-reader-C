@@ -242,7 +242,7 @@ map_rehash(mat_map* map) {
 	for (uint32_t i = 0; i < map->active; i++) {
 		map_bucket* bucket = &map->buckets[i];
 		for (uint32_t j = 0; j < bucket->active; j++) {
-			map_pair* pair = &bucket->pairs[l];
+			map_pair* pair = &bucket->pairs[j];
 			pair->hash = 0;
 		}
 	}

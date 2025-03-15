@@ -13,12 +13,13 @@
 // Implementation
 // -----------------------------------------------------------------------------
 
-mtllib_t mtllib_create(void) {
-	mtllib_t lib = {
-		.name = NULL,
-		.map = (mat_map) {0}
-	};
-	return lib;
+int mtllib_create(mtllib_t* lib) {
+	int code = SUCCESS;
+	if ((code = map_create(&lib->map)) != SUCCESS) {
+		return code;
+	}
+	lib->name = NULL;
+	return code;
 }
 
 void mtllib_destroy(mtllib_t* lib) {
@@ -27,9 +28,9 @@ void mtllib_destroy(mtllib_t* lib) {
 }
 
 void mtllib_print(mtllib_t* lib) {
-	printf("Library Name: \"%s\"", lib->name);
+	printf("Library Name: \"%s\"\n", lib->name);
 	uint32_t used = map_size(&lib->map);
-	printf("Used: %ud", used);
+	printf("Used: %d\n", used);
 	keys_list_t list = map_keys(&lib->map);
 	for (uint32_t i = 0; i < list.used; i++) {
 		printf("\t\"%s\"", list.keys[i]);
@@ -43,21 +44,23 @@ void mtllib_fprint(FILE* file, mtllib_t* lib) {
 	fprintf(file, "Used: %ud", used);
 	keys_list_t list = map_keys(&lib->map);
 	for (uint32_t i = 0; i < list.used; i++) {
-        mtl_t mtl;
+        mtl_t* mtl = NULL;
         map_at(&lib->map, list.keys[i], &mtl);
-		mtl_fprint(file, &mtl);
+		if (mtl) {
+			mtl_fprint(file, mtl);
+		}
 	}
 }
 
 int mtllib_read(const char* fn, mtllib_t* lib) {
-    mtllib_destroy(lib);
     FILE* file = fopen(fn, "r");
 	char* mtltext; // mtl lib contents
     if (!file) {
         return INVALID_FILE;
     } else {
-		// TODO Potential vulnerability: if the file contains a NUL character somewhere,
-		// this will throw off the 'mtltext' string, and could open up attacks
+		// TODO Potential vulnerability: if the file contains a NUL character 
+		// somewhere, this will throw off the 'mtltext' string, and could open 
+		// up attacks
 		fseek(file, 0, SEEK_END);
 		long length = ftell(file);
 		fseek(file, 0, SEEK_SET);
@@ -72,14 +75,14 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
 	tokenize(&cmds, mtltext, "\n");
 	token_node_t* pcmd = cmds.head;
 	// the current material to build
-	mtl_t curr_mat = mtl_create();
+	mtl_t curr_mat;
 	while (pcmd) {
 		token_list_t vars;
 		// get list of parameters to this command
 		ntokenize(&vars, buffer_start(pcmd->buf), pcmd->buf.length, " ");
 		// copy cmd to string
-		const char cmd[256] = { 0 };
-		strncpy(cmd, buffer_start(vars.head->buf), vars.head->buf.length);
+		char cmd[256] = { 0 };
+		buffer_get_strn(&pcmd->buf, cmd, pcmd->buf.length);
 		// switch on cmd type
 		token_node_t* pvar = vars.head;
 		if (strequ(cmd, "newmtl")) {
@@ -90,7 +93,7 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
 			}
 			// Keep copying a name until its done
 			while (pvar) {
-				strncpy(&curr_mat.name, buffer_start(pvar->buf), pvar->buf.length);
+				buffer_get_strn(&pvar->buf, curr_mat.name, pvar->buf.length);
 				pvar = pvar->next;
 			}
 		} else if (strequ(cmd, "Ka")) {
@@ -143,7 +146,7 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
 				return PARSING_FAILURE;
 			}
 			// Get the values
-			buffer_get_int(&pvar->buf, &curr_mat.illum);
+			buffer_get_uint(&pvar->buf, &curr_mat.illum);
 		} else if (strequ(cmd, "d")) {
 			if (!pvar) {
 				// Parameters not provided
@@ -165,14 +168,14 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
 				return PARSING_FAILURE;
 			}
 			// Get the values
-			buffer_get_float(&pvar->buf, &curr_mat.specular_exponent);
+			buffer_get_uint(&pvar->buf, &curr_mat.specular_exponent);
 		} else if (strequ(cmd, "sharpness")) {
 			if (!pvar) {
 				// Parameters not provided
 				return PARSING_FAILURE;
 			}
 			// Get the values
-			buffer_get_int(&pvar->buf, &curr_mat.sharpness);
+			buffer_get_uint(&pvar->buf, &curr_mat.sharpness);
 		} else if (strequ(cmd, "Ni")) {
 			if (!pvar) {
 				// Parameters not provided
@@ -242,11 +245,11 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
 			} else if (buffer_cmp(&pvar->buf, "-texres")) {
 				pvar = pvar->next;
 				// width and height should be equivalent.
-				buffer_get_int(&pvar->buf, &curr_mat.map_Kd.texres.w);
-				buffer_get_int(&pvar->buf, &curr_mat.map_Kd.texres.h);
+				buffer_get_uint(&pvar->buf, &curr_mat.map_Ka.texres.w);
+				buffer_get_uint(&pvar->buf, &curr_mat.map_Ka.texres.h);
 			} else {
 				// Must be the filename
-				buffer_get_strn(&pvar->buf, &curr_mat.map_Kd.filename, MAX_MATERIAL_OPT_FILENAME);
+				buffer_get_strn(&pvar->buf, curr_mat.map_Ka.filename, MAX_MATERIAL_OPT_FILENAME);
 			}
 			pvar = pvar->next;
 		} else if (strequ(cmd, "map_Kd")) {
@@ -311,11 +314,11 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
 			} else if (buffer_cmp(&pvar->buf, "-texres")) {
 				pvar = pvar->next;
 				// width and height should be equivalent.
-				buffer_get_int(&pvar->buf, &curr_mat.map_Kd.texres.w);
-				buffer_get_int(&pvar->buf, &curr_mat.map_Kd.texres.h);
+				buffer_get_uint(&pvar->buf, &curr_mat.map_Ka.texres.w);
+				buffer_get_uint(&pvar->buf, &curr_mat.map_Ka.texres.h);
 			} else {
 				// Must be the filename
-				buffer_get_strn(&pvar->buf, &curr_mat.map_Kd.filename, MAX_MATERIAL_OPT_FILENAME);
+				buffer_get_strn(&pvar->buf, curr_mat.map_Ka.filename, MAX_MATERIAL_OPT_FILENAME);
 			}
 			pvar = pvar->next;
 		} else if (strequ(cmd, "map_Ks")) {
@@ -380,11 +383,11 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
 			} else if (buffer_cmp(&pvar->buf, "-texres")) {
 				pvar = pvar->next;
 				// width and height should be equivalent.
-				buffer_get_int(&pvar->buf, &curr_mat.map_Ks.texres.w);
-				buffer_get_int(&pvar->buf, &curr_mat.map_Ks.texres.h);
+				buffer_get_uint(&pvar->buf, &curr_mat.map_Ks.texres.w);
+				buffer_get_uint(&pvar->buf, &curr_mat.map_Ks.texres.h);
 			} else {
 				// Must be the filename
-				buffer_get_strn(&pvar->buf, &curr_mat.map_Ks.filename, MAX_MATERIAL_OPT_FILENAME);
+				buffer_get_strn(&pvar->buf, curr_mat.map_Ks.filename, MAX_MATERIAL_OPT_FILENAME);
 			}
 			pvar = pvar->next;
 		} else if (strequ(cmd, "map_Ns")) {
@@ -442,8 +445,8 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
 			} else if (buffer_cmp(&pvar->buf, "-texres")) {
 				pvar = pvar->next;
 				// width and height should be equivalent.
-				buffer_get_int(&pvar->buf, &curr_mat.map_Ns.texres.w);
-				buffer_get_int(&pvar->buf, &curr_mat.map_Ns.texres.h);
+				buffer_get_uint(&pvar->buf, &curr_mat.map_Ns.texres.w);
+				buffer_get_uint(&pvar->buf, &curr_mat.map_Ns.texres.h);
 			} else if (buffer_cmp(&pvar->buf, "-imfchan")) {
 				pvar = pvar->next;
 				if (buffer_cmp(&pvar->buf, "r")) {
@@ -461,7 +464,7 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
 				}
 			} else {
 				// Must be the filename
-				buffer_get_strn(&pvar->buf, &curr_mat.map_Ns.filename, MAX_MATERIAL_OPT_FILENAME);
+				buffer_get_strn(&pvar->buf, curr_mat.map_Ns.filename, MAX_MATERIAL_OPT_FILENAME);
 			}
 			pvar = pvar->next;
 		} else if (strequ(cmd, "map_d")) {
@@ -519,8 +522,8 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
 			} else if (buffer_cmp(&pvar->buf, "-texres")) {
 				pvar = pvar->next;
 				// width and height should be equivalent.
-				buffer_get_int(&pvar->buf, &curr_mat.map_d.texres.w);
-				buffer_get_int(&pvar->buf, &curr_mat.map_d.texres.h);
+				buffer_get_uint(&pvar->buf, &curr_mat.map_d.texres.w);
+				buffer_get_uint(&pvar->buf, &curr_mat.map_d.texres.h);
 			} else if (buffer_cmp(&pvar->buf, "-imfchan")) {
 				pvar = pvar->next;
 				if (buffer_cmp(&pvar->buf, "r")) {
@@ -538,7 +541,7 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
 				}
 			} else {
 				// Must be the filename
-				buffer_get_strn(&pvar->buf, &curr_mat.map_d.filename, MAX_MATERIAL_OPT_FILENAME);
+				buffer_get_strn(&pvar->buf, curr_mat.map_d.filename, MAX_MATERIAL_OPT_FILENAME);
 			}
 			pvar = pvar->next;
 		} else if (strequ(cmd, "map_aat")) {
@@ -605,8 +608,8 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
 			} else if (buffer_cmp(&pvar->buf, "-texres")) {
 				pvar = pvar->next;
 				// width and height should be equivalent.
-				buffer_get_int(&pvar->buf, &curr_mat.decal.texres.w);
-				buffer_get_int(&pvar->buf, &curr_mat.decal.texres.h);
+				buffer_get_uint(&pvar->buf, &curr_mat.decal.texres.w);
+				buffer_get_uint(&pvar->buf, &curr_mat.decal.texres.h);
 			} else if (buffer_cmp(&pvar->buf, "-imfchan")) {
 				pvar = pvar->next;
 				if (buffer_cmp(&pvar->buf, "r")) {
@@ -624,7 +627,7 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
 				}
 			} else {
 				// Must be the filename
-				buffer_get_strn(&pvar->buf, &curr_mat.decal.filename, MAX_MATERIAL_OPT_FILENAME);
+				buffer_get_strn(&pvar->buf, curr_mat.decal.filename, MAX_MATERIAL_OPT_FILENAME);
 			}
 			pvar = pvar->next;
 		} else if (strequ(cmd, "disp")) {
@@ -682,8 +685,8 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
 			} else if (buffer_cmp(&pvar->buf, "-texres")) {
 				pvar = pvar->next;
 				// width and height should be equivalent.
-				buffer_get_int(&pvar->buf, &curr_mat.disp.texres.w);
-				buffer_get_int(&pvar->buf, &curr_mat.disp.texres.h);
+				buffer_get_uint(&pvar->buf, &curr_mat.disp.texres.w);
+				buffer_get_uint(&pvar->buf, &curr_mat.disp.texres.h);
 			} else if (buffer_cmp(&pvar->buf, "-imfchan")) {
 				pvar = pvar->next;
 				if (buffer_cmp(&pvar->buf, "r")) {
@@ -701,7 +704,7 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
 				}
 			} else {
 				// Must be the filename
-				buffer_get_strn(&pvar->buf, &curr_mat.disp.filename, MAX_MATERIAL_OPT_FILENAME);
+				buffer_get_strn(&pvar->buf, curr_mat.disp.filename, MAX_MATERIAL_OPT_FILENAME);
 			}
 		} else if (strequ(cmd, "bump")) {
 			if (!pvar) {
@@ -758,8 +761,8 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
 			} else if (buffer_cmp(&pvar->buf, "-texres")) {
 				pvar = pvar->next;
 				// width and height should be equivalent.
-				buffer_get_int(&pvar->buf, &curr_mat.bump.texres.w);
-				buffer_get_int(&pvar->buf, &curr_mat.bump.texres.h);
+				buffer_get_uint(&pvar->buf, &curr_mat.bump.texres.w);
+				buffer_get_uint(&pvar->buf, &curr_mat.bump.texres.h);
 			} else if (buffer_cmp(&pvar->buf, "-imfchan")) {
 				pvar = pvar->next;
 				if (buffer_cmp(&pvar->buf, "r")) {
@@ -780,11 +783,10 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
 				buffer_get_float(&pvar->buf, &curr_mat.bump.bm);
 			} else {
 				// Must be the filename
-				buffer_get_strn(&pvar->buf, &curr_mat.bump.filename, MAX_MATERIAL_OPT_FILENAME);
+				buffer_get_strn(&pvar->buf, curr_mat.bump.filename, MAX_MATERIAL_OPT_FILENAME);
 			}
 		} else if (strequ(cmd, "refl")) {
 			pvar = pvar->next;
-			refl_t refl;
 			refl_opts_t opts;
 			if (!pvar) {
 				// Parameters not provided
@@ -847,8 +849,8 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
 			} else if (buffer_cmp(&pvar->buf, "-texres")) {
 				pvar = pvar->next;
 				// width and height should be equivalent.
-				buffer_get_int(&pvar->buf, &opts.texres.w);
-				buffer_get_int(&pvar->buf, &opts.texres.h);
+				buffer_get_uint(&pvar->buf, &opts.texres.w);
+				buffer_get_uint(&pvar->buf, &opts.texres.h);
 			}
 			if (curr_mat.refl_map.head != NULL) {
 				refl_append(&curr_mat.refl_map, opts);

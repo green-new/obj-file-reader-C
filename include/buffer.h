@@ -24,6 +24,8 @@ buffer_get_float(buffer_t* src, float* dest);
 int 
 buffer_get_int(buffer_t* src, int* dest);
 int 
+buffer_get_uint(buffer_t* src, unsigned int* dest);
+int 
 buffer_get_strn(buffer_t* src, char* dest, unsigned int n);
 int 
 buffer_get_str(buffer_t* src, char* dest);
