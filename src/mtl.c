@@ -67,8 +67,7 @@ mtl_t mtl_create(void) {
 void mtl_destroy(mtl_t* material) {
 	// set everything to zero again
 	// all names are stack strings, so they can just be zero'd
-	*material = (mtl_t) {
-        .name = { 0 },
+	material->name = { 0 },
         .ambient = {0.0f, 0.0f, 0.0f},
         .diffuse = {0.0f, 0.0f, 0.0f},
         .specular = {0.0f, 0.0f, 0.0f},

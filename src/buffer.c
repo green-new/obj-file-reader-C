@@ -1,5 +1,6 @@
 #include "buffer.h"
 #include "defs.h"
+#include <string.h>
 #include <stdlib.h>
 
 #define MAX_TEMP_SIZE 64
