@@ -6,7 +6,7 @@
 void printbuf(buffer_t* buf) {
     char c[64] = {0};
     for (unsigned j = 0; j < buf->length; j++) {
-        c[j] = buffer_start(buf)[j];
+        c[j] = buffer_start(*buf)[j];
     }
     printf("%s", c);
 }
@@ -27,7 +27,7 @@ tokenize;";
     const char* separator = "";
     while (p) {
         printf("%s", separator);
-        printbuf(&p->data);
+        printbuf(&(*p).buf);
         separator = ", ";
         p = p->next;
     }
@@ -51,7 +51,7 @@ tokenize----";
     const char* separator = "";
     while (p) {
         printf("%s", separator);
-        printbuf(&p->data);
+        printbuf(&(*p).buf);
         separator = ", ";
         p = p->next;
     }
@@ -74,7 +74,7 @@ int test_case2() {
     const char* separator = "";
     while (p) {
         printf("%s", separator);
-        printbuf(&p->data);
+        printbuf(&(*p).buf);
         separator = ", ";
         p = p->next;
     }
@@ -98,7 +98,7 @@ will;asdftokenize;asdf";
     const char* separator = "";
     while (p) {
         printf("%s", separator);
-        printbuf(&p->data);
+        printbuf(&(*p).buf);
         separator = ", ";
         p = p->next;
     }
@@ -112,7 +112,7 @@ int test_case0() {
     token_list_t list = (token_list_t) { .head = NULL, .used = 0 };
     if ((code = tokenlist_create(&list)) != SUCCESS) {
         return code;
-    } 
+    }
     if ((code = tokenize(&list, str, ";")) != SUCCESS) {
         return code;
     }
@@ -121,7 +121,7 @@ int test_case0() {
     const char* separator = "";
     while (p) {
         printf("%s", separator);
-        printbuf(&p->data);
+        printbuf(&(*p).buf);
         separator = ", ";
         p = p->next;
     }

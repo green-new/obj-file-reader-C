@@ -7,7 +7,9 @@
 // Static utility functions
 // -----------------------------------------------------------------------------
 
-
+static int prefixequ(const char* str, const char* pre) {
+	return strncmp(pre, str, strlen(pre)) == 0;
+}
 
 // -----------------------------------------------------------------------------
 // Implementation
@@ -53,16 +55,17 @@ void mtllib_fprint(FILE* file, mtllib_t* lib) {
 }
 
 int mtllib_read(const char* fn, mtllib_t* lib) {
-    FILE* file = fopen(fn, "r");
+	FILE* file = fopen(fn, "r");
 	char* mtltext; // mtl lib contents
-    if (!file) {
-        return INVALID_FILE;
+	long length = 0;
+	if (!file) {
+			return INVALID_FILE;
     } else {
 		// TODO Potential vulnerability: if the file contains a NUL character 
 		// somewhere, this will throw off the 'mtltext' string, and could open 
 		// up attacks
 		fseek(file, 0, SEEK_END);
-		long length = ftell(file);
+		length = ftell(file);
 		fseek(file, 0, SEEK_SET);
 		mtltext = malloc(length + 1);
 		if (mtltext) {
@@ -71,21 +74,32 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
 		}
 		fclose(file);
 	}
-	token_list_t cmds;
-	tokenize(&cmds, mtltext, "\n");
+	token_list_t cmds = (token_list_t) { .head = NULL, .used = 0 };
+	if ((tokenlist_create(&cmds)) != SUCCESS) {
+		return MEMORY_REFUSED;
+	}
+	if ((ntokenize(&cmds, mtltext, length, "\n")) != SUCCESS) {
+		return PARSING_FAILURE;
+	}
 	token_node_t* pcmd = cmds.head;
 	// the current material to build
 	mtl_t curr_mat;
 	while (pcmd) {
-		token_list_t vars;
+
+		token_list_t vars = (token_list_t) { .head = NULL, .used = 0 };
+		if ((tokenlist_create(&vars)) != SUCCESS) {
+			return MEMORY_REFUSED;
+		}
 		// get list of parameters to this command
-		ntokenize(&vars, buffer_start(pcmd->buf), pcmd->buf.length, " ");
+		if ((ntokenize(&vars, buffer_start(pcmd->buf), pcmd->buf.length, " ")) != SUCCESS) {
+			return PARSING_FAILURE;
+		}
 		// copy cmd to string
 		char cmd[256] = { 0 };
 		buffer_get_strn(&pcmd->buf, cmd, pcmd->buf.length);
 		// switch on cmd type
 		token_node_t* pvar = vars.head;
-		if (strequ(cmd, "newmtl")) {
+		if (prefixequ(cmd, "newmtl")) {
 			curr_mat = mtl_create();
 			if (!pvar) {
 				// Name not provided
@@ -96,7 +110,7 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
 				buffer_get_strn(&pvar->buf, curr_mat.name, pvar->buf.length);
 				pvar = pvar->next;
 			}
-		} else if (strequ(cmd, "Ka")) {
+		} else if (prefixequ(cmd, "Ka")) {
 			if (!pvar) {
 				// Parameters not provided
 				return PARSING_FAILURE;
@@ -107,7 +121,7 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
 			buffer_get_float(&pvar->buf, &curr_mat.ambient[1]);
 			pvar = pvar->next;
 			buffer_get_float(&pvar->buf, &curr_mat.ambient[2]);
-		} else if (strequ(cmd, "Kd")) {
+		} else if (prefixequ(cmd, "Kd")) {
 			if (!pvar) {
 				// Parameters not provided
 				return PARSING_FAILURE;
@@ -118,7 +132,7 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
 			buffer_get_float(&pvar->buf, &curr_mat.diffuse[1]);
 			pvar = pvar->next;
 			buffer_get_float(&pvar->buf, &curr_mat.diffuse[2]);
-		} else if (strequ(cmd, "Ks")) {
+		} else if (prefixequ(cmd, "Ks")) {
 			if (!pvar) {
 				// Parameters not provided
 				return PARSING_FAILURE;
@@ -129,7 +143,7 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
 			buffer_get_float(&pvar->buf, &curr_mat.specular[1]);
 			pvar = pvar->next;
 			buffer_get_float(&pvar->buf, &curr_mat.specular[2]);
-		} else if (strequ(cmd, "Tf")) {
+		} else if (prefixequ(cmd, "Tf")) {
 			if (!pvar) {
 				// Parameters not provided
 				return PARSING_FAILURE;
@@ -140,14 +154,14 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
 			buffer_get_float(&pvar->buf, &curr_mat.tm_filter[1]);
 			pvar = pvar->next;
 			buffer_get_float(&pvar->buf, &curr_mat.tm_filter[2]);
-		} else if (strequ(cmd, "illum")) {
+		} else if (prefixequ(cmd, "illum")) {
 			if (!pvar) {
 				// Parameters not provided
 				return PARSING_FAILURE;
 			}
 			// Get the values
 			buffer_get_uint(&pvar->buf, &curr_mat.illum);
-		} else if (strequ(cmd, "d")) {
+		} else if (prefixequ(cmd, "d")) {
 			if (!pvar) {
 				// Parameters not provided
 				return PARSING_FAILURE;
@@ -162,28 +176,28 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
 				}
 				pvar = pvar->next;
 			}
-		} else if (strequ(cmd, "Ns")) {
+		} else if (prefixequ(cmd, "Ns")) {
 			if (!pvar) {
 				// Parameters not provided
 				return PARSING_FAILURE;
 			}
 			// Get the values
 			buffer_get_uint(&pvar->buf, &curr_mat.specular_exponent);
-		} else if (strequ(cmd, "sharpness")) {
+		} else if (prefixequ(cmd, "sharpness")) {
 			if (!pvar) {
 				// Parameters not provided
 				return PARSING_FAILURE;
 			}
 			// Get the values
 			buffer_get_uint(&pvar->buf, &curr_mat.sharpness);
-		} else if (strequ(cmd, "Ni")) {
+		} else if (prefixequ(cmd, "Ni")) {
 			if (!pvar) {
 				// Parameters not provided
 				return PARSING_FAILURE;
 			}
 			// Get the values
 			buffer_get_float(&pvar->buf, &curr_mat.optical_density);
-		} else if (strequ(cmd, "map_Kd")) {
+		} else if (prefixequ(cmd, "map_Kd")) {
 			if (!pvar) {
 				// Parameters not provided
 				return PARSING_FAILURE;
@@ -252,7 +266,7 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
 				buffer_get_strn(&pvar->buf, curr_mat.map_Ka.filename, MAX_MATERIAL_OPT_FILENAME);
 			}
 			pvar = pvar->next;
-		} else if (strequ(cmd, "map_Kd")) {
+		} else if (prefixequ(cmd, "map_Kd")) {
 			if (!pvar) {
 				// Parameters not provided
 				return PARSING_FAILURE;
@@ -321,7 +335,7 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
 				buffer_get_strn(&pvar->buf, curr_mat.map_Ka.filename, MAX_MATERIAL_OPT_FILENAME);
 			}
 			pvar = pvar->next;
-		} else if (strequ(cmd, "map_Ks")) {
+		} else if (prefixequ(cmd, "map_Ks")) {
 			if (!pvar) {
 				// Parameters not provided
 				return PARSING_FAILURE;
@@ -390,7 +404,7 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
 				buffer_get_strn(&pvar->buf, curr_mat.map_Ks.filename, MAX_MATERIAL_OPT_FILENAME);
 			}
 			pvar = pvar->next;
-		} else if (strequ(cmd, "map_Ns")) {
+		} else if (prefixequ(cmd, "map_Ns")) {
 			if (!pvar) {
 				// Parameters not provided
 				return PARSING_FAILURE;
@@ -467,7 +481,7 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
 				buffer_get_strn(&pvar->buf, curr_mat.map_Ns.filename, MAX_MATERIAL_OPT_FILENAME);
 			}
 			pvar = pvar->next;
-		} else if (strequ(cmd, "map_d")) {
+		} else if (prefixequ(cmd, "map_d")) {
 			if (!pvar) {
 				// Parameters not provided
 				return PARSING_FAILURE;
@@ -544,7 +558,7 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
 				buffer_get_strn(&pvar->buf, curr_mat.map_d.filename, MAX_MATERIAL_OPT_FILENAME);
 			}
 			pvar = pvar->next;
-		} else if (strequ(cmd, "map_aat")) {
+		} else if (prefixequ(cmd, "map_aat")) {
 			if (!pvar) {
 				// Parameters not provided
 				return PARSING_FAILURE;
@@ -553,7 +567,7 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
 				curr_mat.map_aat = 1;
 			}
 			pvar = pvar->next;
-		} else if (strequ(cmd, "decal")) {
+		} else if (prefixequ(cmd, "decal")) {
 			if (!pvar) {
 				// Parameters not provided
 				return PARSING_FAILURE;
@@ -630,7 +644,7 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
 				buffer_get_strn(&pvar->buf, curr_mat.decal.filename, MAX_MATERIAL_OPT_FILENAME);
 			}
 			pvar = pvar->next;
-		} else if (strequ(cmd, "disp")) {
+		} else if (prefixequ(cmd, "disp")) {
 			if (!pvar) {
 				// Parameters not provided
 				return PARSING_FAILURE;
@@ -706,7 +720,7 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
 				// Must be the filename
 				buffer_get_strn(&pvar->buf, curr_mat.disp.filename, MAX_MATERIAL_OPT_FILENAME);
 			}
-		} else if (strequ(cmd, "bump")) {
+		} else if (prefixequ(cmd, "bump")) {
 			if (!pvar) {
 				// Parameters not provided
 				return PARSING_FAILURE;
@@ -785,7 +799,7 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
 				// Must be the filename
 				buffer_get_strn(&pvar->buf, curr_mat.bump.filename, MAX_MATERIAL_OPT_FILENAME);
 			}
-		} else if (strequ(cmd, "refl")) {
+		} else if (prefixequ(cmd, "refl")) {
 			pvar = pvar->next;
 			refl_opts_t opts;
 			if (!pvar) {

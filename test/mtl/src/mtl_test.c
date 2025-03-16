@@ -2,7 +2,7 @@
 #include "mtllib.h"
 
 int test_mtl_read(mtllib_t* lib) {
-    return mtllib_read("D:\\Programming\\obj-file-reader-C\\models\\cube.mtl", lib);
+    return mtllib_read("..\\..\\..\\models\\cube.mtl", lib);
 }
 
 int main() {
