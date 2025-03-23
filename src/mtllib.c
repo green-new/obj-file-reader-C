@@ -1,5 +1,6 @@
 #include "mtllib.h"
 #include "token.h"
+#include <ctype.h>
 #include <string.h>
 #include <stdio.h>
 
@@ -8,6 +9,14 @@
 // -----------------------------------------------------------------------------
 
 static int prefixequ(const char* str, const char* pre) {
+	// Trim leading spaces
+	while (isspace((unsigned char)*str)) {
+		str++;
+	}
+	// Check if both are null just incase
+	if (*str == '\0' && *pre == '\0') {
+		return 1;
+	}
 	return strncmp(pre, str, strlen(pre)) == 0;
 }
 
@@ -78,7 +87,7 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
 	if ((tokenlist_create(&cmds)) != SUCCESS) {
 		return MEMORY_REFUSED;
 	}
-	if ((ntokenize(&cmds, mtltext, length, "\n")) != SUCCESS) {
+	if ((ntokenize(&cmds, mtltext, length, "\r\n")) != SUCCESS) {
 		return PARSING_FAILURE;
 	}
 	token_node_t* pcmd = cmds.head;
@@ -96,7 +105,7 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
 		}
 		// copy cmd to string
 		char cmd[256] = { 0 };
-		buffer_get_strn(&pcmd->buf, cmd, pcmd->buf.length);
+		buffer_get_str(&pcmd->buf, cmd);
 		// switch on cmd type
 		token_node_t* pvar = vars.head;
 		if (prefixequ(cmd, "newmtl")) {
@@ -105,9 +114,10 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
 				// Name not provided
 				return PARSING_FAILURE;
 			}
-			// Keep copying a name until its done
+			// Keep copying a name until its done, 
+			// since a list of names could be provided
 			while (pvar) {
-				buffer_get_strn(&pvar->buf, curr_mat.name, pvar->buf.length);
+				buffer_get_str(&pvar->buf, curr_mat.name);
 				pvar = pvar->next;
 			}
 		} else if (prefixequ(cmd, "Ka")) {
@@ -263,7 +273,7 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
 				buffer_get_uint(&pvar->buf, &curr_mat.map_Ka.texres.h);
 			} else {
 				// Must be the filename
-				buffer_get_strn(&pvar->buf, curr_mat.map_Ka.filename, MAX_MATERIAL_OPT_FILENAME);
+				buffer_get_str(&pvar->buf, curr_mat.map_Ka.filename);
 			}
 			pvar = pvar->next;
 		} else if (prefixequ(cmd, "map_Kd")) {
@@ -332,7 +342,7 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
 				buffer_get_uint(&pvar->buf, &curr_mat.map_Ka.texres.h);
 			} else {
 				// Must be the filename
-				buffer_get_strn(&pvar->buf, curr_mat.map_Ka.filename, MAX_MATERIAL_OPT_FILENAME);
+				buffer_get_str(&pvar->buf, curr_mat.map_Ka.filename);
 			}
 			pvar = pvar->next;
 		} else if (prefixequ(cmd, "map_Ks")) {
@@ -401,7 +411,7 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
 				buffer_get_uint(&pvar->buf, &curr_mat.map_Ks.texres.h);
 			} else {
 				// Must be the filename
-				buffer_get_strn(&pvar->buf, curr_mat.map_Ks.filename, MAX_MATERIAL_OPT_FILENAME);
+				buffer_get_str(&pvar->buf, curr_mat.map_Ks.filename);
 			}
 			pvar = pvar->next;
 		} else if (prefixequ(cmd, "map_Ns")) {
@@ -478,7 +488,7 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
 				}
 			} else {
 				// Must be the filename
-				buffer_get_strn(&pvar->buf, curr_mat.map_Ns.filename, MAX_MATERIAL_OPT_FILENAME);
+				buffer_get_str(&pvar->buf, curr_mat.map_Ns.filename);
 			}
 			pvar = pvar->next;
 		} else if (prefixequ(cmd, "map_d")) {
@@ -555,7 +565,7 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
 				}
 			} else {
 				// Must be the filename
-				buffer_get_strn(&pvar->buf, curr_mat.map_d.filename, MAX_MATERIAL_OPT_FILENAME);
+				buffer_get_str(&pvar->buf, curr_mat.map_d.filename);
 			}
 			pvar = pvar->next;
 		} else if (prefixequ(cmd, "map_aat")) {
@@ -641,7 +651,7 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
 				}
 			} else {
 				// Must be the filename
-				buffer_get_strn(&pvar->buf, curr_mat.decal.filename, MAX_MATERIAL_OPT_FILENAME);
+				buffer_get_str(&pvar->buf, curr_mat.decal.filename);
 			}
 			pvar = pvar->next;
 		} else if (prefixequ(cmd, "disp")) {
@@ -718,7 +728,7 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
 				}
 			} else {
 				// Must be the filename
-				buffer_get_strn(&pvar->buf, curr_mat.disp.filename, MAX_MATERIAL_OPT_FILENAME);
+				buffer_get_str(&pvar->buf, curr_mat.disp.filename);
 			}
 		} else if (prefixequ(cmd, "bump")) {
 			if (!pvar) {
@@ -797,7 +807,7 @@ int mtllib_read(const char* fn, mtllib_t* lib) {
 				buffer_get_float(&pvar->buf, &curr_mat.bump.bm);
 			} else {
 				// Must be the filename
-				buffer_get_strn(&pvar->buf, curr_mat.bump.filename, MAX_MATERIAL_OPT_FILENAME);
+				buffer_get_str(&pvar->buf, curr_mat.bump.filename);
 			}
 		} else if (prefixequ(cmd, "refl")) {
 			pvar = pvar->next;

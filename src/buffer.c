@@ -134,14 +134,8 @@ loop_exit: ;
 	}
 	return SUCCESS;
 }
-int buffer_get_strn(buffer_t* restrict src, char* restrict dest, unsigned int n) {
-	for (unsigned int i = 0; i < n; i++) {
-		dest[i] = buffer_at(*src, i);
-	}
-	return SUCCESS;
-}
 int buffer_get_str(buffer_t* restrict src, char* restrict dest) {
-	for (unsigned int i = 0; i < src->length; i++) {
+	for (unsigned int i = src->offset; i < src->length; i++) {
 		dest[i] = buffer_at(*src, i);
 	}
 	return SUCCESS;
