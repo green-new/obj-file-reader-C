@@ -13,7 +13,7 @@
 #define MAX_MATERIAL_OPT_FILENAME (unsigned int)255
 
 /** The filename for the texture or image. */
-typedef char 							filename_t[MAX_MATERIAL_OPT_FILENAME];
+typedef char 								filename_t[MAX_MATERIAL_OPT_FILENAME];
 /** Turns texture blending in the horizontal direction on or off. Default is 1 
  * (on). */
 typedef int 								blendu_t;
@@ -52,13 +52,18 @@ typedef float								turb_t[3];
  * @brief Specifies the resolution of the texture created when an image is used.
  * The default texture size is the largest power of 2 that does not exceed the
  * original image size. */
-typedef struct { unsigned int w; unsigned int h; }	texres_t;
+typedef struct { unsigned int w; 
+				unsigned int h; }			texres_t;
 /** Enables or disables anti-aliasing of textures in this material.*/
 typedef int 								map_aat_t;
 /** Specifies the type of the reflection map.*/
-typedef enum { refl_sphere, refl_cube_top, 		
-			refl_cube_front, refl_cube_back,
-			refl_cube_left, refl_cube_right }	refl_type_t;
+typedef enum { refl_sphere, 
+			refl_cube_top,
+			refl_cube_bottom,
+			refl_cube_front, 
+			refl_cube_back, 
+			refl_cube_left, 
+			refl_cube_right }				refl_type_t;
 
 /** @struct map_Ka_t
  * @brief Ambient reflectivity mapping options.

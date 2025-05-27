@@ -16,7 +16,7 @@ refl_node_t* refl_node_create(refl_opts_t options) {
 
 int
 refl_create(refl_t* refl, refl_opts_t options) {
-    refl->used = 0;
+    refl->used = 1;
     refl->head = refl_node_create(options);
     if (!refl->head) {
         return MEMORY_REFUSED;
@@ -37,15 +37,15 @@ refl_destroy(refl_t* refl) {
 
 int
 refl_append(refl_t* refl, refl_opts_t options) {
-    refl->used++;
     refl_node_t* p = refl->head;
-    while (p->next) {
+    while (p) {
         p = p->next;
     }
-    p->next = calloc(1, sizeof(refl_node_t));
-    if (!p->next) {
+    p = calloc(1, sizeof(refl_node_t));
+    if (!p) {
         return MEMORY_REFUSED;
     }
-    p->next->options = options;
+    p->options = options;
+    refl->used++;
     return SUCCESS;
 }

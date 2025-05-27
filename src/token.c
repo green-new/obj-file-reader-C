@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "token.h"
+#include "utils.h"
 
 // -----------------------------------------------------------------------------
 // Static utility
@@ -76,7 +77,12 @@ tokenize(token_list_t* const out, const char* str, const char* delim) {
 }
 
 int 
-ntokenize(token_list_t* const out, const char* str, unsigned int n, const char* delim) {
+ntokenize(
+	token_list_t* const out, 
+	const char* str, 
+	unsigned int n, 
+	const char* delim
+) {
 	int code = SUCCESS;
 	token_node_t* p = out->head;
 	token_node_t* q = NULL;
@@ -89,12 +95,13 @@ ntokenize(token_list_t* const out, const char* str, unsigned int n, const char* 
 	while (begin < n) {
 		token = strstr(str + begin, delim);
 		if (token == NULL) {
-			return SUCCESS;
+			end = n;
+		} else {
+			end = (unsigned int) (token - str) > n ? n : (token - str);
 		}
-		end = (unsigned int) (token - str);
 		buffer_t buf = (buffer_t) { 
 			.data = str, .offset = begin, .length = end - begin 
-			};
+		};
 		if (!p) {
 			if ((code = tokennode_create(&p)) != SUCCESS) {
 				return code;
@@ -107,9 +114,63 @@ ntokenize(token_list_t* const out, const char* str, unsigned int n, const char* 
 		q = p;
 		p = p->next;
 		out->used++;
-		begin = (unsigned int) (token - str + delim_len);
+		begin = end + delim_len;
 	}
 	return SUCCESS;
+}
+
+int
+tokenlist_read_void(
+	unsigned int n,
+	token_list_t list,
+	type_t type,
+	void* dest,
+	int copy_first_value
+) {
+	if (list.used != n) {
+		return PARSING_FAILURE;
+	}
+	const token_node_t* p = list.head;
+
+	switch (type) {
+		case TYPE_FLOAT:
+			for (unsigned int i = 0; i < n; i++) {
+				if (!p) {
+					return PARSING_FAILURE;
+				}
+				buffer_get_float(p->buf, dest + (i * sizeof(float)));
+
+				if (!copy_first_value) {
+					p = p->next;
+				}
+			}
+		return SUCCESS;
+		case TYPE_STR:
+			for (unsigned int i = 0; i < n; i++) {
+				if (!p) {
+					return PARSING_FAILURE;
+				}
+				buffer_get_str(p->buf, dest + (i * sizeof(char)));
+
+				if (!copy_first_value) {
+					p = p->next;
+				}
+			}
+		return SUCCESS;
+		case TYPE_UINT:
+			for (unsigned int i = 0; i < n; i++) {
+				if (!p) {
+					return PARSING_FAILURE;
+				}
+				buffer_get_uint(p->buf, dest + (i * sizeof(unsigned int)));
+
+				if (!copy_first_value) {
+					p = p->next;
+				}
+			}
+		return SUCCESS;
+		default: return PARSING_FAILURE;
+	}
 }
 
 void 

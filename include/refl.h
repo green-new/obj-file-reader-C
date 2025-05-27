@@ -34,7 +34,7 @@ typedef struct {
  * @brief Reflection map list node containing individual options.
  */
 typedef struct refl_node_t {
-	refl_opts_t		options;
+	refl_opts_t			options;
 	struct refl_node_t*	next;
 } refl_node_t;
 
