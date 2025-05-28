@@ -18,21 +18,21 @@
  */
 typedef struct {
     /* The position of this vertex. */
-    double* pos;
+    float* pos;
 } vertex_t;
 
 /** Represents geometric texture coordinates.
  */
 typedef struct {
     /* The texture coordinates. */
-    double* tex;
+    float* tex;
 } texture_t;
 
 /** Represents geometric normal coordinates.
  */
 typedef struct {
     /* The normal vector. */
-    double* norm;
+    float* norm;
 } normal_t;
 
 /** @struct face_t

@@ -11,7 +11,12 @@ int main(int argc, char** argv) {
     double duration;
     printf("Reading the file...\n");
 
-    int code = obj_read(argv[1], &mesh);
+    const char* fn = argv[1];
+    if (argv[1] == NULL) {
+        fn = "..\\..\\..\\models\\cube.obj";
+    }
+
+    int code = obj_read(fn, &mesh);
 
     printf("obj_read returned: %d\n", code);
 
@@ -20,6 +25,7 @@ int main(int argc, char** argv) {
 
     printf("Mesh took: %f seconds (CPU time)\n", duration);
 
+    obj_print(&mesh);
     obj_fwrite(&mesh, "output.txt");
     obj_destroy(&mesh);
 

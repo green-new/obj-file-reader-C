@@ -57,7 +57,7 @@ buffer_print(const void* data, const type_t type, const uint32_t length) {
 		printf("%s", separator);
         switch(type) {
             case TYPE_FLOAT:
-                printf("%f", ((double*)data)[i]);
+                printf("%f", ((float*)data)[i]);
             break;
             case TYPE_UINT:
                 printf("%u", ((uint32_t*)data)[i]);
@@ -83,7 +83,7 @@ const uint32_t dim) {
 		fprintf(fptr, "%s", separator);
         switch (type) {
             case TYPE_FLOAT:
-                fprintf(fptr, "%f", ((double*)data)[j]);
+                fprintf(fptr, "%f", ((float*)data)[j]);
             break;
             case TYPE_UINT:
                 fprintf(fptr, "%u", ((uint32_t*)data)[j]);

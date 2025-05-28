@@ -143,7 +143,10 @@ static int obj_setinfo(mesh_t* mesh, FILE* file, char* err_msg) {
 
         if (strequ(type, "v")) {
             tmp_num_verts++;
-            if ((RETURN_CODE = check_dim(&mesh->vertex_dim, &tmp, original_string_for_dim)) != SUCCESS) {
+            if ((RETURN_CODE = check_dim(
+                &mesh->vertex_dim, 
+                &tmp, 
+                original_string_for_dim)) != SUCCESS) {
                 sprintf(err_msg, "Error: mismatch of vertex dimension at line \
 					%d: expected %d, got %d vertices\n",
                     line_number, mesh->vertex_dim, tmp);
@@ -151,7 +154,10 @@ static int obj_setinfo(mesh_t* mesh, FILE* file, char* err_msg) {
             }
         } else if (strequ(type, "vn")) {
             tmp_num_norms++;
-            if ((RETURN_CODE = check_dim(&mesh->vertex_dim, &tmp, original_string_for_dim)) != SUCCESS) {
+            if ((RETURN_CODE = check_dim(
+                &mesh->vertex_dim, 
+                &tmp, 
+                original_string_for_dim)) != SUCCESS) {
                 sprintf(err_msg, "Error: mismatch of vertex normal dimension \
 					at line %d: expected %d, got %d vertex normals (must be same \
 					dimensions as vertex dimension)\n",
@@ -160,7 +166,10 @@ static int obj_setinfo(mesh_t* mesh, FILE* file, char* err_msg) {
             }
         } else if (strequ(type, "vt")){
             tmp_num_texs++;
-            if ((RETURN_CODE = check_dim(&mesh->tex_dim, &tmp, original_string_for_dim)) != SUCCESS) {
+            if ((RETURN_CODE = check_dim(
+                &mesh->tex_dim, 
+                &tmp, 
+                original_string_for_dim)) != SUCCESS) {
                 sprintf(err_msg, "Error: mismatch of vertex texture dimension \
 					at line %d: expected %d, got %d vertex texture components\n"
 					, line_number, mesh->tex_dim, tmp);
@@ -168,12 +177,18 @@ static int obj_setinfo(mesh_t* mesh, FILE* file, char* err_msg) {
             }
         } else if (strequ(type, "f")) {
             tmp_num_faces++;
-            if ((RETURN_CODE = check_dim(&mesh->face_dim, &tmp, original_string_for_dim)) != SUCCESS) {
-                sprintf(err_msg, "Error: mismatch of face dimension at line %d: expected %d, got %d face components\n",
+            if ((RETURN_CODE = check_dim(
+                &mesh->face_dim, 
+                &tmp, 
+                original_string_for_dim)) != SUCCESS) {
+                sprintf(err_msg, "Error: mismatch of face dimension at line %d:\
+                 expected %d, got %d face components\n",
                         line_number, mesh->tex_dim, tmp);
                 return RETURN_CODE;
             }
-            mesh->face_flag.flag = get_face_flag(original_string_for_face, line_number);
+            mesh->face_flag.flag = get_face_flag(
+                original_string_for_face, 
+                line_number);
         } else if (strequ(type, "o") && !name_defined) {
             char* tmp_name = strtok(NULL, "\n");
             mesh->name = calloc(1, strlen(tmp_name));
@@ -241,7 +256,11 @@ void obj_fwrite(const mesh_t* mesh, const char* fn) {
         fprintf(file, "none\n");
     } else {
         for (uint32_t i = 0; i < mesh->num_vertices; i++) {
-            buffer_fwrite(file, mesh->vertex_data[i].pos, TYPE_FLOAT, mesh->vertex_dim);
+            buffer_fwrite(
+                file, 
+                mesh->vertex_data[i].pos, 
+                TYPE_FLOAT, 
+                mesh->vertex_dim);
         }
     }
 
@@ -250,7 +269,11 @@ void obj_fwrite(const mesh_t* mesh, const char* fn) {
         fprintf(file, "none\n");
     } else {
         for (uint32_t i = 0; i < mesh->num_normals; i++) {
-            buffer_fwrite(file, mesh->normal_data[i].norm, TYPE_FLOAT, mesh->vertex_dim);
+            buffer_fwrite(
+                file, 
+                mesh->normal_data[i].norm, 
+                TYPE_FLOAT, 
+                mesh->vertex_dim);
         }
     }
 
@@ -259,7 +282,11 @@ void obj_fwrite(const mesh_t* mesh, const char* fn) {
         fprintf(file, "none\n");
     } else {
         for (uint32_t i = 0; i < mesh->num_textures; i++) {
-            buffer_fwrite(file, mesh->texture_data[i].tex, TYPE_FLOAT, mesh->tex_dim);
+            buffer_fwrite(
+                file, 
+                mesh->texture_data[i].tex, 
+                TYPE_FLOAT, 
+                mesh->tex_dim);
         }
     }
 
@@ -268,7 +295,11 @@ void obj_fwrite(const mesh_t* mesh, const char* fn) {
         fprintf(file, "*** Face %d ***\n", i+1);
         if (mesh->face_flag.flag & pos_flag) {
             fprintf(file, "Position Indices ->");
-            buffer_fwrite(file, mesh->face_data[i].indices, TYPE_UINT, mesh->face_dim);
+            buffer_fwrite(
+                file, 
+                mesh->face_data[i].indices, 
+                TYPE_UINT, 
+                mesh->face_dim);
         }
 
         if (mesh->face_flag.flag & tex_flag) {
@@ -458,7 +489,7 @@ int obj_read(const char* fn, mesh_t* mesh) {
             dataformat = TYPE_FLOAT;
             ni++;
         } else if (strequ(type, "f")) {
-            if (buffer_init(line_buffer_cpy, face_buffers.face_str_buffer, mesh->face_dim, TYPE_STR)) {
+            if (buffer_init(line_buffer_cpy, face_buffers.face_str_buffer, mesh->face_dim, TYPE_STR) != SUCCESS) {
                 continue;
 			}
             for (uint32_t j = 0; j < mesh->face_dim; j++) {
@@ -473,7 +504,7 @@ int obj_read(const char* fn, mesh_t* mesh) {
                     face_buffers.tex_idx_buffer[j] = tex_index;
                     buffer = strtok(NULL, "/");
                 }
-                if(mesh->face_flag.flag & norm_flag) {
+                if (mesh->face_flag.flag & norm_flag) {
                     int norm_index = atoi(buffer);
                     face_buffers.norm_idx_buffer[j] = norm_index;
                     buffer = strtok(NULL, "/");
@@ -505,7 +536,7 @@ int obj_read(const char* fn, mesh_t* mesh) {
             return RETURN_CODE;
         }
 
-        if (buffer_init(line_buffer_cpy, generic_buffer, dim, dataformat)) {
+        if (buffer_init(line_buffer_cpy, generic_buffer, dim, dataformat) != SUCCESS) {
             continue;
 		}
 
